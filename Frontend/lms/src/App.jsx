@@ -1,9 +1,14 @@
-function App() {
-  const [count, setCount] = useState(0);
+import { Routes, Route } from "react-router";
+import LandingPageLayout from "./components/LandingPageComponents/LandingPageLayout";
 
+function App() {
   return (
     <>
-      <div>Hello World</div>
+      <Routes>
+        <Route path="/">
+          <Route index element={<LandingPageLayout />} />
+        </Route>
+      </Routes>
     </>
   );
 }
