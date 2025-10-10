@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const mongodb_uri =
   process.env.MONGO_URI ||
-  "mongodb://admin:password@localhost:27017/codingClub?authSource=admin";
+  "mongodb://admin:password@localhost:27017/lms?authSource=admin";
 
 mongoose
   .connect(mongodb_uri)
