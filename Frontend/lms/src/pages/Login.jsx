@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
 import {
   FaEye,
@@ -7,6 +7,7 @@ import {
   FaChalkboardTeacher,
   FaCog,
 } from "react-icons/fa";
+import axiosInstance from "../../utils/axiosInstance";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -26,25 +27,34 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Login form submitted:", formData);
+    loginUser();
+  };
+
+  const loginUser = async () => {
+    const userData = axiosInstance
+      .post("/login-user", {
+        email: formData.email,
+        password: formData.password,
+      })
+      .then((res) => {
+        console.log(formData.role);
+      })
+      .catch((err) => {
+        console.log(err.message);
+      });
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left Side - Illustration */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-orange-100 to-orange-200 relative overflow-hidden">
-        {/* Background decorative elements */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-20 w-32 h-32 bg-orange-300/30 rounded-full blur-xl"></div>
           <div className="absolute bottom-32 right-20 w-24 h-24 bg-yellow-300/30 rounded-full blur-lg"></div>
           <div className="absolute top-1/2 left-1/3 w-40 h-40 bg-orange-200/40 rounded-full blur-2xl"></div>
         </div>
-
-        {/* Illustration Content */}
         <div className="relative z-10 flex items-center justify-center w-full p-12">
           <div className="max-w-md">
-            {/* Simple illustration representation */}
             <div className="relative">
-              {/* Laptop/Device mockup */}
               <div className="bg-white rounded-2xl shadow-xl p-8 transform rotate-3 hover:rotate-1 transition-transform duration-300">
                 <div className="space-y-4">
                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -53,8 +63,6 @@ const Login = () => {
                   <div className="h-8 bg-blue-100 rounded w-full mt-6"></div>
                 </div>
               </div>
-
-              {/* Character representation */}
               <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
                 <div className="w-8 h-8 bg-white rounded-full"></div>
               </div>
@@ -70,7 +78,6 @@ const Login = () => {
       {/* Right Side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-md space-y-8">
-          {/* Header */}
           <div className="text-center">
             <Link
               to="/"

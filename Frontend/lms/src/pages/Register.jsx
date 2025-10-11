@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router";
 import { FaEye, FaEyeSlash, FaUser, FaChalkboardTeacher } from "react-icons/fa";
+import axiosInstance from "../../utils/axiosInstance";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -27,25 +28,36 @@ const Register = () => {
       return;
     }
     console.log("Register form submitted:", formData);
+    registerUser();
+  };
+
+  const registerUser = () => {
+    const userData = axiosInstance
+      .post("/register-user", {
+        userName: formData.userName,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      })
+      .then((res) => {
+        console.log("User registered successfully");
+      })
+      .catch((err) => {
+        console.log(err.message);
+      });
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Left Side - Illustration */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-orange-100 to-orange-200 relative overflow-hidden">
-        {/* Background decorative elements */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-20 w-32 h-32 bg-orange-300/30 rounded-full blur-xl"></div>
           <div className="absolute bottom-32 right-20 w-24 h-24 bg-yellow-300/30 rounded-full blur-lg"></div>
           <div className="absolute top-1/2 left-1/3 w-40 h-40 bg-orange-200/40 rounded-full blur-2xl"></div>
         </div>
-
-        {/* Illustration Content */}
         <div className="relative z-10 flex items-center justify-center w-full p-12">
           <div className="max-w-md">
-            {/* Simple illustration representation */}
             <div className="relative">
-              {/* Main illustration circle */}
               <div className="w-48 h-48 bg-white/80 rounded-full flex items-center justify-center shadow-xl backdrop-blur-sm border border-white/50">
                 <div className="w-32 h-32 bg-gradient-to-br from-orange-300 to-yellow-300 rounded-full flex items-center justify-center">
                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md">
@@ -53,8 +65,6 @@ const Register = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Floating elements */}
               <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-bounce shadow-lg"></div>
               <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-gradient-to-r from-green-400 to-blue-400 rounded-full animate-pulse shadow-lg"></div>
               <div className="absolute top-1/2 -right-8 w-8 h-8 bg-gradient-to-r from-pink-400 to-red-400 rounded-full animate-ping"></div>
@@ -66,7 +76,6 @@ const Register = () => {
       {/* Right Side - Register Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-md space-y-6">
-          {/* Header */}
           <div className="text-center">
             <Link
               to="/"

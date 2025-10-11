@@ -5,8 +5,16 @@ import cookieParser from "cookie-parser";
 
 import dbConnection from "./config/db-connection.js";
 import userRoutes from "./routes/userRoutes.js";
+import cors from "cors";
 
 const app = express();
+
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
