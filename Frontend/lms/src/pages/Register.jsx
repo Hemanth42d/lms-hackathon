@@ -33,7 +33,7 @@ const Register = () => {
 
   const registerUser = () => {
     const userData = axiosInstance
-      .post("/register-user", {
+      .post("/register", {
         userName: formData.userName,
         email: formData.email,
         password: formData.password,

@@ -32,7 +32,7 @@ const Login = () => {
 
   const loginUser = async () => {
     const userData = axiosInstance
-      .post("/login-user", {
+      .post("/login", {
         email: formData.email,
         password: formData.password,
       })

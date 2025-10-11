@@ -1,18 +1,27 @@
 import express from "express";
 import {
+  registerUser,
   loginUser,
   logoutUser,
-  registerUser,
+  sendPasswordResetOTP,
+  resetPassword,
 } from "../controllers/AuthControllers.js";
 
 const router = express.Router();
 
-router.get("/test", (req, res) => {
-  res.send("Testing the connection...");
-});
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.post("/logout", logoutUser);
 
-router.post("/register-user", registerUser);
-router.post("/login-user", loginUser);
-router.get("/logout", logoutUser);
+router.post("/send-password-reset-otp", sendPasswordResetOTP);
+router.post("/reset-password", resetPassword);
+
+router.get("/test", (req, res) => {
+  res.json({
+    success: true,
+    message: "API routes are working!",
+    timestamp: new Date(),
+  });
+});
 
 export default router;
