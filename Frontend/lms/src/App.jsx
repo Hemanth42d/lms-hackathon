@@ -11,6 +11,7 @@ import StudentMessages from "./pages/StudentMessages";
 import StudentSettings from "./pages/StudentSettings";
 import StudentMyCourses from "./components/StudentDashboard/StudentMyCourses";
 import StudentNotifications from "./pages/StudentNotifications";
+import StudentCourseLearning from "./pages/StudentCourseLearning";
 
 function App() {
   return (
@@ -32,6 +33,10 @@ function App() {
             <Route path="dashboard" element={<StudentDashboard />} />
             <Route path="courses" element={<StudentCourses />} />
             <Route path="my-courses" element={<StudentMyCourses />} />
+            <Route
+              path="/student/course/:courseId/learn"
+              element={<StudentCourseLearning />}
+            />
             <Route path="calendar" element={<StudentCalendar />} />
             <Route path="messages" element={<StudentMessages />} />
             <Route path="settings" element={<StudentSettings />} />

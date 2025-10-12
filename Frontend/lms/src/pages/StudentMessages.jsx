@@ -322,7 +322,7 @@ const StudentMessages = () => {
           </div>
 
           {/* Chat Area */}
-          <div className="flex-1 flex flex-col hidden md:flex">
+          <div className="flex-1 flex flex-col md:flex">
             {selectedChat ? (
               <>
                 {/* Chat Header */}

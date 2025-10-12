@@ -278,7 +278,12 @@ const StudentMyCourses = () => {
                       ></div>
                     </div>
                   </div>
-                  <button className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() =>
+                      navigate(`/student/course/${course.id}/learn`)
+                    }
+                    className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm flex items-center justify-center space-x-2"
+                  >
                     <FaPlay className="w-3 h-3" />
                     <span>Continue</span>
                   </button>
