@@ -12,6 +12,16 @@ import StudentSettings from "./pages/StudentSettings";
 import StudentMyCourses from "./components/StudentDashboard/StudentMyCourses";
 import StudentNotifications from "./pages/StudentNotifications";
 import StudentCourseLearning from "./pages/StudentCourseLearning";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import TeacherDashboardLayout from "./components/TeacherDashboard/TeacherDashboardLayout";
+import TeacherCourses from "./pages/TeacherCourses";
+import CourseLectures from "./pages/CourseLectures";
+import CourseAssignments from "./pages/CourseAssignments";
+import CourseDiscussions from "./pages/CourseDiscussions";
+import TeacherMessages from "./pages/TeacherMessages";
+import TeacherProfile from "./pages/TeacherProfile";
+import TeacherSettings from "./pages/TeacherSettings";
+import CourseDetail from "./pages/CourseDetail";
 
 function App() {
   return (
@@ -41,6 +51,27 @@ function App() {
             <Route path="messages" element={<StudentMessages />} />
             <Route path="settings" element={<StudentSettings />} />
             <Route path="notifications" element={<StudentNotifications />} />
+          </Route>
+
+          <Route path="/teacher" element={<TeacherDashboardLayout />}>
+            <Route
+              index
+              element={<Navigate to="/teacher/dashboard" replace />}
+            />
+            <Route path="dashboard" element={<TeacherDashboard />} />
+            <Route path="courses" element={<TeacherCourses />} />
+            <Route path="messages" element={<TeacherMessages />} />
+            <Route path="profile" element={<TeacherProfile />} />
+            <Route path="settings" element={<TeacherSettings />} />
+
+            {/* Individual Course Management Routes */}
+            <Route path="course/:courseId" element={<CourseDetail />}>
+              {/* Default to lectures when entering a course */}
+              <Route index element={<Navigate to="lectures" replace />} />
+              <Route path="lectures" element={<CourseLectures />} />
+              <Route path="assignments" element={<CourseAssignments />} />
+              <Route path="discussions" element={<CourseDiscussions />} />
+            </Route>
           </Route>
 
           {/* Catch all - redirect to home */}
