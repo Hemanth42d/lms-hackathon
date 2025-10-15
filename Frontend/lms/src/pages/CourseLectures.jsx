@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import {
   FaPlus,
   FaPlay,
+  FaClock,
   FaEdit,
   FaTrash,
-  FaClock,
-  FaEye,
-  FaFileAlt,
-  FaVideo,
+  FaFilePdf,
+  FaFilePowerpoint,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
-// import toast from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const CourseLectures = ({ courseId, course }) => {
   const [lectures, setLectures] = useState([]);
@@ -22,46 +22,44 @@ const CourseLectures = ({ courseId, course }) => {
     description: "",
     duration: "",
     videoUrl: "",
-    materials: [],
+    pdfUrl: "",
+    pptUrl: "",
   });
 
+  // Sample lectures data
   const sampleLectures = [
     {
       id: 1,
-      title: "Introduction to Python",
-      description: "Basic concepts and syntax of Python programming language",
-      duration: "45 mins",
-      videoUrl: "https://example.com/video1",
-      materials: ["slides.pdf", "code_examples.py"],
-      order: 1,
-      isPublished: true,
-      views: 35,
-      createdAt: "2024-01-20",
+      title: "Introduction to Python Basics",
+      description:
+        "Learn the fundamentals of Python programming including variables, data types, and basic syntax.",
+      duration: "45 minutes",
+      videoUrl: "https://example.com/video1.mp4",
+      pdfUrl: "https://example.com/notes1.pdf",
+      pptUrl: "https://example.com/slides1.pptx",
+      createdAt: "2024-03-15T10:00:00Z",
     },
     {
       id: 2,
-      title: "Variables and Data Types",
+      title: "Control Structures and Loops",
       description:
-        "Understanding variables, strings, numbers, and basic data types in Python",
-      duration: "60 mins",
-      videoUrl: "https://example.com/video2",
-      materials: ["variables_guide.pdf", "exercises.py"],
-      order: 2,
-      isPublished: true,
-      views: 32,
-      createdAt: "2024-01-22",
+        "Understanding if-else statements, for loops, and while loops in Python.",
+      duration: "60 minutes",
+      videoUrl: "https://example.com/video2.mp4",
+      pdfUrl: "https://example.com/notes2.pdf",
+      pptUrl: "",
+      createdAt: "2024-03-16T10:00:00Z",
     },
     {
       id: 3,
-      title: "Control Structures",
-      description: "If statements, loops, and conditional logic",
-      duration: "50 mins",
-      videoUrl: "",
-      materials: ["control_structures.pdf"],
-      order: 3,
-      isPublished: false,
-      views: 0,
-      createdAt: "2024-01-25",
+      title: "Functions and Modules",
+      description:
+        "Learn how to create and use functions, and work with Python modules.",
+      duration: "50 minutes",
+      videoUrl: "https://example.com/video3.mp4",
+      pdfUrl: "",
+      pptUrl: "https://example.com/slides3.pptx",
+      createdAt: "2024-03-17T10:00:00Z",
     },
   ];
 
@@ -72,6 +70,11 @@ const CourseLectures = ({ courseId, course }) => {
   const fetchLectures = async () => {
     setLoading(true);
     try {
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/courses/${courseId}/lectures`);
+      // const data = await response.json();
+      // setLectures(data.lectures);
+
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setLectures(sampleLectures);
     } catch (error) {
@@ -81,19 +84,100 @@ const CourseLectures = ({ courseId, course }) => {
     }
   };
 
-  const handleCreateLecture = () => {
+  const handleInputChange = (field, value) => {
+    setFormData({
+      ...formData,
+      [field]: value,
+    });
+  };
+
+  const handleCreateLecture = async (e) => {
+    e.preventDefault();
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/courses/${courseId}/lectures`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(formData)
+      // });
+      // const data = await response.json();
+
+      const newLecture = {
+        id: Date.now(),
+        ...formData,
+        createdAt: new Date().toISOString(),
+      };
+
+      setLectures([...lectures, newLecture]);
+      setShowModal(false);
+      setFormData({
+        title: "",
+        description: "",
+        duration: "",
+        videoUrl: "",
+        pdfUrl: "",
+        pptUrl: "",
+      });
+      toast.success("Lecture created successfully");
+    } catch (error) {
+      toast.error("Failed to create lecture");
+    }
+  };
+
+  const handleEditLecture = async (e) => {
+    e.preventDefault();
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch(`/api/lectures/${selectedLecture.id}`, {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(formData)
+      // });
+
+      setLectures(
+        lectures.map((lecture) =>
+          lecture.id === selectedLecture.id
+            ? { ...lecture, ...formData }
+            : lecture
+        )
+      );
+
+      setShowModal(false);
+      setSelectedLecture(null);
+      toast.success("Lecture updated successfully");
+    } catch (error) {
+      toast.error("Failed to update lecture");
+    }
+  };
+
+  const handleDeleteLecture = async (lectureId) => {
+    if (window.confirm("Are you sure you want to delete this lecture?")) {
+      try {
+        // TODO: Replace with actual API call
+        // await fetch(`/api/lectures/${lectureId}`, { method: 'DELETE' });
+
+        setLectures(lectures.filter((lecture) => lecture.id !== lectureId));
+        toast.success("Lecture deleted successfully");
+      } catch (error) {
+        toast.error("Failed to delete lecture");
+      }
+    }
+  };
+
+  const openCreateModal = () => {
     setModalMode("create");
     setFormData({
       title: "",
       description: "",
       duration: "",
       videoUrl: "",
-      materials: [],
+      pdfUrl: "",
+      pptUrl: "",
     });
     setShowModal(true);
   };
 
-  const handleEditLecture = (lecture) => {
+  const openEditModal = (lecture) => {
     setModalMode("edit");
     setSelectedLecture(lecture);
     setFormData({
@@ -101,57 +185,10 @@ const CourseLectures = ({ courseId, course }) => {
       description: lecture.description,
       duration: lecture.duration,
       videoUrl: lecture.videoUrl,
-      materials: lecture.materials,
+      pdfUrl: lecture.pdfUrl || "",
+      pptUrl: lecture.pptUrl || "",
     });
     setShowModal(true);
-  };
-
-  const handleDeleteLecture = async (lectureId) => {
-    if (window.confirm("Are you sure you want to delete this lecture?")) {
-      setLectures(lectures.filter((lecture) => lecture.id !== lectureId));
-      toast.success("Lecture deleted successfully");
-    }
-  };
-
-  const togglePublish = async (lectureId) => {
-    setLectures(
-      lectures.map((lecture) =>
-        lecture.id === lectureId
-          ? { ...lecture, isPublished: !lecture.isPublished }
-          : lecture
-      )
-    );
-    toast.success("Lecture status updated");
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (modalMode === "create") {
-        const newLecture = {
-          id: Date.now(),
-          ...formData,
-          order: lectures.length + 1,
-          isPublished: false,
-          views: 0,
-          createdAt: new Date().toISOString().split("T")[0],
-        };
-        setLectures([...lectures, newLecture]);
-        toast.success("Lecture created successfully");
-      } else {
-        setLectures(
-          lectures.map((lecture) =>
-            lecture.id === selectedLecture.id
-              ? { ...lecture, ...formData }
-              : lecture
-          )
-        );
-        toast.success("Lecture updated successfully");
-      }
-      setShowModal(false);
-    } catch (error) {
-      toast.error(`Failed to ${modalMode} lecture`);
-    }
   };
 
   if (loading) {
@@ -160,14 +197,11 @@ const CourseLectures = ({ courseId, course }) => {
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="animate-pulse border border-gray-200 rounded-lg p-4"
+            className="animate-pulse border border-gray-200 rounded-lg p-6"
           >
-            <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
-            <div className="flex space-x-4">
-              <div className="h-4 bg-gray-200 rounded w-20"></div>
-              <div className="h-4 bg-gray-200 rounded w-16"></div>
-            </div>
+            <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
           </div>
         ))}
       </div>
@@ -175,167 +209,235 @@ const CourseLectures = ({ courseId, course }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Course Lectures</h3>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Course Lectures
+          </h3>
+          <p className="text-gray-600 text-sm">
+            Manage video lectures and materials
+          </p>
+        </div>
         <button
-          onClick={handleCreateLecture}
-          className="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-cyan-600 transition-all duration-200 flex items-center space-x-2"
+          onClick={openCreateModal}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
         >
           <FaPlus className="w-4 h-4" />
           <span>Add Lecture</span>
         </button>
       </div>
 
-      <div className="space-y-3">
-        {lectures.map((lecture) => (
-          <div
-            key={lecture.id}
-            className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium">
-                      {lecture.order}
+      {/* Lectures List */}
+      <div className="space-y-4">
+        {lectures.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-lg border">
+            <FaPlay className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No lectures yet
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Start by adding your first lecture
+            </p>
+            <button
+              onClick={openCreateModal}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Add First Lecture
+            </button>
+          </div>
+        ) : (
+          lectures.map((lecture, index) => (
+            <div
+              key={lecture.id}
+              className="bg-white border border-gray-200 rounded-lg p-6"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">
+                      Lecture {index + 1}
                     </span>
-                    <h4 className="font-medium text-gray-900">
+                    <h4 className="font-semibold text-gray-900 text-lg">
                       {lecture.title}
                     </h4>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        lecture.isPublished
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {lecture.isPublished ? "Published" : "Draft"}
-                    </span>
+                  </div>
+
+                  <p className="text-gray-700 mb-3">{lecture.description}</p>
+
+                  <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
+                    <div className="flex items-center space-x-1">
+                      <FaClock className="w-3 h-3" />
+                      <span>{lecture.duration}</span>
+                    </div>
+                  </div>
+
+                  {/* Materials */}
+                  <div className="flex items-center space-x-4">
+                    {lecture.videoUrl && (
+                      <a
+                        href={lecture.videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors"
+                      >
+                        <FaPlay className="w-4 h-4" />
+                        <span>Watch Video</span>
+                        <FaExternalLinkAlt className="w-3 h-3" />
+                      </a>
+                    )}
+
+                    {lecture.pdfUrl && (
+                      <a
+                        href={lecture.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-2 text-red-600 hover:text-red-800 transition-colors"
+                      >
+                        <FaFilePdf className="w-4 h-4" />
+                        <span>PDF Notes</span>
+                        <FaExternalLinkAlt className="w-3 h-3" />
+                      </a>
+                    )}
+
+                    {lecture.pptUrl && (
+                      <a
+                        href={lecture.pptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-2 text-orange-600 hover:text-orange-800 transition-colors"
+                      >
+                        <FaFilePowerpoint className="w-4 h-4" />
+                        <span>Slides</span>
+                        <FaExternalLinkAlt className="w-3 h-3" />
+                      </a>
+                    )}
                   </div>
                 </div>
-                <p className="text-gray-600 text-sm mt-1">
-                  {lecture.description}
-                </p>
-                <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                  <span className="flex items-center space-x-1">
-                    <FaClock className="w-3 h-3" />
-                    <span>{lecture.duration}</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <FaEye className="w-3 h-3" />
-                    <span>{lecture.views} views</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <FaFileAlt className="w-3 h-3" />
-                    <span>{lecture.materials.length} materials</span>
-                  </span>
-                  {lecture.videoUrl && (
-                    <span className="flex items-center space-x-1">
-                      <FaVideo className="w-3 h-3" />
-                      <span>Video</span>
-                    </span>
-                  )}
+
+                {/* Actions */}
+                <div className="flex items-center space-x-2 ml-4">
+                  <button
+                    onClick={() => openEditModal(lecture)}
+                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Edit lecture"
+                  >
+                    <FaEdit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteLecture(lecture.id)}
+                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete lecture"
+                  >
+                    <FaTrash className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => togglePublish(lecture.id)}
-                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                    lecture.isPublished
-                      ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-                      : "bg-green-100 text-green-800 hover:bg-green-200"
-                  }`}
-                >
-                  {lecture.isPublished ? "Unpublish" : "Publish"}
-                </button>
-                <button
-                  onClick={() => handleEditLecture(lecture)}
-                  className="p-2 text-gray-400 hover:text-indigo-600 rounded transition-colors"
-                >
-                  <FaEdit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteLecture(lecture.id)}
-                  className="p-2 text-gray-400 hover:text-red-600 rounded transition-colors"
-                >
-                  <FaTrash className="w-4 h-4" />
-                </button>
-              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Create/Edit Lecture Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               {modalMode === "create" ? "Add New Lecture" : "Edit Lecture"}
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form
+              onSubmit={
+                modalMode === "create" ? handleCreateLecture : handleEditLecture
+              }
+              className="space-y-4"
+            >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Lecture Title
+                  Lecture Title *
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  onChange={(e) => handleInputChange("title", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter lecture title"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
+                  Description *
                 </label>
                 <textarea
                   required
                   value={formData.description}
                   onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
+                    handleInputChange("description", e.target.value)
                   }
                   rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="Enter lecture description"
-                ></textarea>
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Describe what this lecture covers"
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Duration
+                  Duration *
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.duration}
                   onChange={(e) =>
-                    setFormData({ ...formData, duration: e.target.value })
+                    handleInputChange("duration", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., 45 minutes"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Video URL (Optional)
+                  Video URL *
                 </label>
                 <input
                   type="url"
+                  required
                   value={formData.videoUrl}
                   onChange={(e) =>
-                    setFormData({ ...formData, videoUrl: e.target.value })
+                    handleInputChange("videoUrl", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="Enter video URL"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://example.com/video.mp4"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  PDF Notes URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.pdfUrl}
+                  onChange={(e) => handleInputChange("pdfUrl", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://example.com/notes.pdf (optional)"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  PowerPoint Slides URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.pptUrl}
+                  onChange={(e) => handleInputChange("pptUrl", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://example.com/slides.pptx (optional)"
                 />
               </div>
 
@@ -349,7 +451,7 @@ const CourseLectures = ({ courseId, course }) => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-cyan-600 transition-all duration-200"
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   {modalMode === "create" ? "Add Lecture" : "Update Lecture"}
                 </button>

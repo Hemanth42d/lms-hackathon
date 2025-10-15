@@ -22,6 +22,8 @@ import TeacherMessages from "./pages/TeacherMessages";
 import TeacherProfile from "./pages/TeacherProfile";
 import TeacherSettings from "./pages/TeacherSettings";
 import CourseDetail from "./pages/CourseDetail";
+import AdminLayout from "./components/adminDashboard/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 function App() {
   return (
@@ -73,6 +75,90 @@ function App() {
               <Route path="discussions" element={<CourseDiscussions />} />
             </Route>
           </Route>
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              // <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+              // </ProtectedRoute>
+            }
+          />
+          {/* <Route 
+            path="/admin/users/*" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout><UserManagement /></AdminLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/courses/*" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout><CourseManagement /></AdminLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/enrollments" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout><div>Enrollment Management</div></AdminLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/assignments" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout><div>Assignment Management</div></AdminLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/analytics/*" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout><AdminAnalytics /></AdminLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/content" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout><div>Content Management</div></AdminLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/settings/*" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout><AdminSettings /></AdminLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/notifications" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout><div>Notifications</div></AdminLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/support" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout><div>Support</div></AdminLayout>
+              </ProtectedRoute>
+            } 
+          /> */}
 
           {/* Catch all - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />

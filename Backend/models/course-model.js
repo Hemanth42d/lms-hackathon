@@ -9,12 +9,22 @@ const courseSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  studentsCount: {
+    type: Number,
+  },
+  assignmentsCount: {
+    type: Number,
+  },
+  discussionsCount: {
+    type: Number,
+  },
   instructor: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
   category: String,
   thumbnailUrl: String,
+  duration: String,
   lectures: [
     {
       type: mongoose.Schema.Types.ObjectId,

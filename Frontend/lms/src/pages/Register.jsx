@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { FaEye, FaEyeSlash, FaUser, FaChalkboardTeacher } from "react-icons/fa";
 import axiosInstance from "../../utils/axiosInstance";
 
@@ -13,6 +13,7 @@ const Register = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -41,6 +42,13 @@ const Register = () => {
       })
       .then((res) => {
         console.log("User registered successfully");
+        if (formData.role === "Student") {
+          navigate("/student");
+        } else if (formData.role === "Teacher") {
+          navigate("/teacher");
+        } else if (formData.role === "Admin") {
+          navigate("/admin");
+        }
       })
       .catch((err) => {
         console.log(err.message);
@@ -267,7 +275,7 @@ const Register = () => {
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg"
               >
-                Login
+                Create Account
               </button>
             </form>
 

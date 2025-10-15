@@ -11,6 +11,7 @@ import {
   FaClock,
   FaArrowRight,
 } from "react-icons/fa";
+import axiosInstance from "../../utils/axiosInstance";
 // import toast from "react-hot-toast";
 
 const TeacherCourses = () => {
@@ -25,6 +26,7 @@ const TeacherCourses = () => {
     description: "",
     duration: "",
     category: "",
+    thumbnail: "",
   });
 
   const navigate = useNavigate();
@@ -124,35 +126,41 @@ const TeacherCourses = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      if (modalMode === "create") {
-        const newCourse = {
-          id: Date.now(),
-          ...formData,
-          studentsCount: 0,
-          lecturesCount: 0,
-          assignmentsCount: 0,
-          discussionsCount: 0,
-          createdAt: new Date().toISOString().split("T")[0],
-          status: "draft",
-          thumbnail:
-            "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=200&fit=crop",
-        };
-        setCourses([...courses, newCourse]);
-        toast.success("Course created successfully");
-      } else {
-        setCourses(
-          courses.map((course) =>
-            course.id === selectedCourse.id
-              ? { ...course, ...formData }
-              : course
-          )
-        );
-        toast.success("Course updated successfully");
-      }
-      setShowModal(false);
-    } catch (error) {
-      toast.error(`Failed to ${modalMode} course`);
+    // try {
+    //   if (modalMode === "create") {
+    //     const newCourse = {
+    //       id: Date.now(),
+    //       ...formData,
+    //       studentsCount: 0,
+    //       lecturesCount: 0,
+    //       assignmentsCount: 0,
+    //       discussionsCount: 0,
+    //       createdAt: new Date().toISOString().split("T")[0],
+    //       status: "draft",
+    //       thumbnail:
+    //         "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=200&fit=crop",
+    //     };
+    //     setCourses([...courses, newCourse]);
+    //     toast.success("Course created successfully");
+    //   } else {
+    //     setCourses(
+    //       courses.map((course) =>
+    //         course.id === selectedCourse.id
+    //           ? { ...course, ...formData }
+    //           : course
+    //       )
+    //     );
+    //     toast.success("Course updated successfully");
+    //   }
+    //   setShowModal(false);
+    // } catch (error) {
+    //   toast.error(`Failed to ${modalMode} course`);
+    // }
+
+    if (modalMode === "create") {
+      postCourseToServer();
+    } else {
+      //postUpdatedCourseToServer();
     }
   };
 
@@ -182,6 +190,24 @@ const TeacherCourses = () => {
       </div>
     </div>
   );
+
+  // api for creating the course
+  const postCourseToServer = () => {
+    const course = axiosInstance
+      .post("/teacher/courses/add-new-course", {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        thumbnailUrl: formData.thumbnail,
+        duration: formData.duration,
+      })
+      .then((res) => {
+        setShowModal(false);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   return (
     <div className="space-y-6">
@@ -415,6 +441,22 @@ const TeacherCourses = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   placeholder="Enter course description"
                 ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Thumbnail
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.thumbnail}
+                  onChange={(e) =>
+                    setFormData({ ...formData, thumbnail: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="Thumbnail url"
+                />
               </div>
 
               <div>

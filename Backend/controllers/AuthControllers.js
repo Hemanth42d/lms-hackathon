@@ -81,9 +81,9 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
-    if (!email || !password) {
+    if (!email || !password || !role) {
       return res.status(400).json({
         error: true,
         message: "Email and password are required",
@@ -92,7 +92,7 @@ export const loginUser = async (req, res) => {
 
     const user = await userModel.findOne({ email });
 
-    if (!user) {
+    if (!user || role != user.role) {
       return res.status(404).json({
         error: true,
         message: "User does not exist. Please create a new account.",

@@ -119,7 +119,7 @@ const ForgotPassword = () => {
         // Redirect to login page after 2 seconds
         setTimeout(() => {
           navigate("/login");
-        }, 2000);
+        }, 1000);
       } else {
         throw new Error(response.data.message || "Failed to reset password");
       }
