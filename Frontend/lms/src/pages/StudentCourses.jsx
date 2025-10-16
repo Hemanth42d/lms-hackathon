@@ -3,6 +3,7 @@ import { FaSearch } from "react-icons/fa";
 import CourseCardEnrollment from "../components/StudentDashboard/CourseCardEnrollment";
 import CourseFilter from "../components/StudentDashboard/CourseFilter";
 import Pagination from "../components/StudentDashboard/Pagination";
+import { useCourses } from "../../context/CourseContext";
 
 const StudentCourses = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -11,255 +12,23 @@ const StudentCourses = () => {
   const [filteredCourses, setFilteredCourses] = useState([]);
   const coursesPerPage = 8;
 
+  // Get courses data from context
+  const {
+    courses,
+    loading: contextLoading,
+    error,
+    fetchCourses,
+  } = useCourses();
+
+  // Extract unique categories from real course data
   const categories = [
     "All",
-    "Technology",
-    "Business",
-    "Design",
-    "Science",
-    "Marketing",
-  ];
-
-  // Available courses for enrollment
-  const allCourses = [
-    {
-      id: 1,
-      title: "Introduction to Python Programming",
-      duration: "4 hours",
-      instructor: "Alex Turner",
-      category: "Technology",
-      image:
-        "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=500",
-      price: 0,
-      rating: 4.8,
-      reviews: 1240,
-      enrolled: 15420,
-      description:
-        "Learn Python from scratch with hands-on projects and real-world applications.",
-    },
-    {
-      id: 2,
-      title: "Digital Marketing Fundamentals",
-      duration: "6 hours",
-      instructor: "Sarah Chen",
-      category: "Marketing",
-      image:
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500",
-      price: 49.99,
-      rating: 4.6,
-      reviews: 890,
-      enrolled: 8750,
-      description:
-        "Master digital marketing strategies including SEO, social media, and content marketing.",
-    },
-    {
-      id: 3,
-      title: "Graphic Design Masterclass",
-      duration: "5 hours",
-      instructor: "Emily Carter",
-      category: "Design",
-      image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500",
-      price: 0,
-      rating: 4.9,
-      reviews: 2100,
-      enrolled: 12500,
-      description:
-        "Create stunning designs with Adobe Creative Suite and design principles.",
-    },
-    {
-      id: 4,
-      title: "Financial Modeling and Analysis",
-      duration: "8 hours",
-      instructor: "David Lee",
-      category: "Business",
-      image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500",
-      price: 79.99,
-      rating: 4.7,
-      reviews: 650,
-      enrolled: 5200,
-      description:
-        "Build comprehensive financial models and analyze business performance.",
-    },
-    {
-      id: 5,
-      title: "Web Development Bootcamp",
-      duration: "12 hours",
-      instructor: "Michael Brown",
-      category: "Technology",
-      image:
-        "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=500",
-      price: 99.99,
-      rating: 4.9,
-      reviews: 3200,
-      enrolled: 25000,
-      description:
-        "Full-stack web development with HTML, CSS, JavaScript, React, and Node.js.",
-    },
-    {
-      id: 6,
-      title: "Data Science with Python",
-      duration: "10 hours",
-      instructor: "Dr. Emma Wilson",
-      category: "Technology",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500",
-      price: 89.99,
-      rating: 4.8,
-      reviews: 1800,
-      enrolled: 18500,
-      description:
-        "Learn data analysis, visualization, and machine learning with Python libraries.",
-    },
-    {
-      id: 7,
-      title: "Business Strategy Essentials",
-      duration: "7 hours",
-      instructor: "Prof. James Anderson",
-      category: "Business",
-      image:
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500",
-      price: 0,
-      rating: 4.5,
-      reviews: 720,
-      enrolled: 6800,
-      description:
-        "Develop winning business strategies and competitive advantages.",
-    },
-    {
-      id: 8,
-      title: "UI/UX Design Principles",
-      duration: "6 hours",
-      instructor: "Sophie Martinez",
-      category: "Design",
-      image: "https://images.unsplash.com/photo-1561070791-36c11767b26a?w=500",
-      price: 59.99,
-      rating: 4.7,
-      reviews: 1500,
-      enrolled: 11200,
-      description:
-        "Design user-centered interfaces with modern UX principles and tools.",
-    },
-    {
-      id: 9,
-      title: "Machine Learning Fundamentals",
-      duration: "15 hours",
-      instructor: "Dr. Robert Chen",
-      category: "Technology",
-      image: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=500",
-      price: 129.99,
-      rating: 4.9,
-      reviews: 2800,
-      enrolled: 22000,
-      description:
-        "Master machine learning algorithms and build predictive models.",
-    },
-    {
-      id: 10,
-      title: "Social Media Marketing",
-      duration: "5 hours",
-      instructor: "Lisa Johnson",
-      category: "Marketing",
-      image:
-        "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=500",
-      price: 0,
-      rating: 4.6,
-      reviews: 980,
-      enrolled: 9500,
-      description:
-        "Build engaging social media campaigns across all major platforms.",
-    },
-    {
-      id: 11,
-      title: "Photography Masterclass",
-      duration: "8 hours",
-      instructor: "Mark Stevens",
-      category: "Design",
-      image:
-        "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=500",
-      price: 69.99,
-      rating: 4.8,
-      reviews: 1100,
-      enrolled: 8900,
-      description:
-        "Master photography techniques from composition to post-processing.",
-    },
-    {
-      id: 12,
-      title: "Project Management Professional",
-      duration: "10 hours",
-      instructor: "Jennifer White",
-      category: "Business",
-      image:
-        "https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=500",
-      price: 99.99,
-      rating: 4.7,
-      reviews: 1600,
-      enrolled: 14500,
-      description:
-        "Learn project management methodologies and lead successful projects.",
-    },
-    {
-      id: 13,
-      title: "Advanced Excel for Business",
-      duration: "6 hours",
-      instructor: "Tom Harris",
-      category: "Business",
-      image:
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500",
-      price: 0,
-      rating: 4.5,
-      reviews: 890,
-      enrolled: 10200,
-      description:
-        "Master Excel formulas, pivot tables, and data analysis techniques.",
-    },
-    {
-      id: 14,
-      title: "Mobile App Development",
-      duration: "14 hours",
-      instructor: "Chris Taylor",
-      category: "Technology",
-      image:
-        "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=500",
-      price: 119.99,
-      rating: 4.8,
-      reviews: 2200,
-      enrolled: 16800,
-      description: "Build iOS and Android apps with React Native and Flutter.",
-    },
-    {
-      id: 15,
-      title: "Content Writing Masterclass",
-      duration: "5 hours",
-      instructor: "Rachel Green",
-      category: "Marketing",
-      image:
-        "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500",
-      price: 39.99,
-      rating: 4.6,
-      reviews: 750,
-      enrolled: 7200,
-      description:
-        "Write compelling content that engages and converts your audience.",
-    },
-    {
-      id: 16,
-      title: "Cybersecurity Basics",
-      duration: "8 hours",
-      instructor: "Kevin Park",
-      category: "Technology",
-      image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500",
-      price: 0,
-      rating: 4.7,
-      reviews: 1300,
-      enrolled: 13500,
-      description:
-        "Protect systems and data with essential cybersecurity practices.",
-    },
+    ...new Set(courses.map((course) => course.category).filter(Boolean)),
   ];
 
   // Filter courses based on search and category
   useEffect(() => {
-    let filtered = allCourses;
+    let filtered = courses;
 
     // Filter by category
     if (selectedCategory !== "All") {
@@ -273,14 +42,17 @@ const StudentCourses = () => {
       filtered = filtered.filter(
         (course) =>
           course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          course.instructor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          course.category.toLowerCase().includes(searchQuery.toLowerCase())
+          course.instructor
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          course.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          course.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     setFilteredCourses(filtered);
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, courses]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
@@ -302,6 +74,90 @@ const StudentCourses = () => {
     // You can add API call here to enroll the student
     alert(`Enrolling in: ${course.title}`);
   };
+
+  // Show loading state
+  if (contextLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            Courses
+          </h1>
+          <p className="text-gray-600">
+            Explore and enroll in courses to enhance your skills
+          </p>
+        </div>
+
+        {/* Loading Skeleton */}
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+            <div className="flex gap-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-10 w-20 bg-gray-200 rounded-lg animate-pulse"
+                ></div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Course Grid Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse"
+            >
+              <div className="h-48 bg-gray-200"></div>
+              <div className="p-4 space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
+                <div className="h-8 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && !contextLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            Courses
+          </h1>
+          <p className="text-gray-600">
+            Explore and enroll in courses to enhance your skills
+          </p>
+        </div>
+
+        {/* Error State */}
+        <div className="bg-white rounded-lg shadow-md p-12 text-center">
+          <div className="text-red-400 mb-4">
+            <FaSearch className="w-16 h-16 mx-auto" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Failed to load courses
+          </h3>
+          <p className="text-gray-500 mb-4">{error}</p>
+          <button
+            onClick={fetchCourses}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -344,7 +200,7 @@ const StudentCourses = () => {
       {/* Results Info */}
       <div className="flex items-center justify-between">
         <p className="text-gray-600">
-          Showing {indexOfFirstCourse + 1}-
+          Showing {filteredCourses.length > 0 ? indexOfFirstCourse + 1 : 0}-
           {Math.min(indexOfLastCourse, filteredCourses.length)} of{" "}
           {filteredCourses.length} courses
         </p>
@@ -357,34 +213,77 @@ const StudentCourses = () => {
         </div>
       </div>
 
+      {/* Course Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg p-4 border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Courses</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {courses.length}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg p-4 border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Free Courses</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {
+                  courses.filter(
+                    (course) => !course.price || course.price === 0
+                  ).length
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg p-4 border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Categories</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {categories.length - 1}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Featured Courses Section */}
       <div className="mt-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6">
-          Featured Courses
+          Available Courses
         </h2>
 
         {/* No Results State */}
-        {filteredCourses.length === 0 && (
+        {filteredCourses.length === 0 && !contextLoading && (
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <div className="text-gray-400 mb-4">
               <FaSearch className="w-16 h-16 mx-auto" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No courses found
+              {courses.length === 0
+                ? "No courses available"
+                : "No courses found"}
             </h3>
             <p className="text-gray-500 mb-4">
-              Try adjusting your search or filters to find what you're looking
-              for.
+              {courses.length === 0
+                ? "Check back later for new courses."
+                : "Try adjusting your search or filters to find what you're looking for."}
             </p>
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedCategory("All");
-              }}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Clear Filters
-            </button>
+            {courses.length > 0 && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("All");
+                }}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
         )}
 
@@ -393,8 +292,30 @@ const StudentCourses = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {currentCourses.map((course) => (
               <CourseCardEnrollment
-                key={course.id}
-                course={course}
+                key={course._id || course.id}
+                course={{
+                  id: course._id || course.id,
+                  title: course.title,
+                  duration: course.duration,
+                  instructor:
+                    course.instructor ||
+                    course.createdBy?.name ||
+                    "Unknown Instructor",
+                  category: course.category,
+                  image:
+                    course.thumbnailUrl ||
+                    course.thumbnail ||
+                    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500",
+                  price: course.price || 0,
+                  rating: course.rating || 4.5,
+                  reviews: course.reviewsCount || course.reviews?.length || 0,
+                  enrolled:
+                    course.studentsCount ||
+                    course.enrolledStudents?.length ||
+                    0,
+                  description: course.description,
+                  status: course.status,
+                }}
                 onEnroll={handleEnroll}
               />
             ))}

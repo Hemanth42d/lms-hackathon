@@ -1,72 +1,106 @@
-import React, { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
 
-const CourseContext = createContext();
+const CourseContext = createContext({
+  courses: [],
+  lectures: [],
+  assignments: [],
+  course: {},
+  lecture: {},
+  assignment: {},
+  loading: false,
+  error: null,
+  fetchCourses: () => {},
+  getCourseById: () => null,
+  getLectureById: () => null,
+  getAssignmentById: () => null,
+});
 
-export const useCourse = () => useContext(CourseContext);
+export const useCourses = () => {
+  const context = useContext(CourseContext); // Fixed: was courseContext
+  if (context === undefined) {
+    throw new Error("useCourses must be used within a CourseDataProvider"); // Fixed error message
+  }
+  return context;
+};
 
-export const CourseProvider = ({ children }) => {
+const DataProvider = ({ children }) => {
+  // State management
   const [courses, setCourses] = useState([]);
-  const [course, setCourse] = useState(null);
   const [lectures, setLectures] = useState([]);
-  const [lecture, setLecture] = useState(null);
   const [assignments, setAssignments] = useState([]);
-  const [assignment, setAssignment] = useState(null);
+  const [course, setCourse] = useState({});
+  const [lecture, setLecture] = useState({});
+  const [assignment, setAssignment] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Fetch all courses
   const fetchCourses = async () => {
-    const res = await axiosInstance.get("/courses");
-    setCourses(res.data);
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.get("/get-all-courses");
+      setCourses(response.data.courses);
+      return { success: true, data: response.data.courses };
+    } catch (error) {
+      console.error("Error fetching Courses data:", error.message);
+      setError(error.message);
+      return { error: true, message: error.message };
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Fetch single course
-  const fetchCourse = async (id) => {
-    const res = await axiosInstance.get(`/courses/${id}`);
-    setCourse(res.data);
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  // Helper functions
+  const getCourseById = (id) => {
+    return courses.find((course) => course._id === id) || null;
   };
 
-  // Fetch all lectures for a course
-  const fetchLectures = async (courseId) => {
-    const res = await axiosInstance.get(`/courses/${courseId}/lectures`);
-    setLectures(res.data);
+  const getLectureById = (id) => {
+    return lectures.find((lecture) => lecture._id === id) || null;
   };
 
-  // Fetch single lecture
-  const fetchLecture = async (lectureId) => {
-    const res = await axiosInstance.get(`/lectures/${lectureId}`);
-    setLecture(res.data);
+  const getAssignmentById = (id) => {
+    return assignments.find((assignment) => assignment._id === id) || null;
   };
 
-  // Fetch all assignments for a course
-  const fetchAssignments = async (courseId) => {
-    const res = await axiosInstance.get(`/courses/${courseId}/assignments`);
-    setAssignments(res.data);
-  };
-
-  // Fetch single assignment
-  const fetchAssignment = async (assignmentId) => {
-    const res = await axiosInstance.get(`/assignments/${assignmentId}`);
-    setAssignment(res.data);
-  };
+  // Fixed: Don't call fetchCourses() in useMemo, just pass the function reference
+  const contextValue = useMemo(
+    () => ({
+      courses,
+      lectures,
+      assignments,
+      course,
+      lecture,
+      assignment,
+      loading,
+      error,
+      fetchCourses,
+      getCourseById,
+      getLectureById,
+      getAssignmentById,
+    }),
+    [
+      courses,
+      lectures,
+      assignments,
+      course,
+      lecture,
+      assignment,
+      loading,
+      error,
+    ]
+  );
 
   return (
-    <CourseContext.Provider
-      value={{
-        courses,
-        course,
-        lectures,
-        lecture,
-        assignments,
-        assignment,
-        fetchCourses,
-        fetchCourse,
-        fetchLectures,
-        fetchLecture,
-        fetchAssignments,
-        fetchAssignment,
-      }}
-    >
+    <CourseContext.Provider value={contextValue}>
       {children}
     </CourseContext.Provider>
   );
 };
+
+export default DataProvider;

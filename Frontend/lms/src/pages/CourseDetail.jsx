@@ -5,6 +5,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -16,43 +17,57 @@ import {
 import CourseLectures from "./CourseLectures";
 import CourseAssignments from "./CourseAssignments";
 import CourseDiscussions from "./CourseDiscussions";
-// import DiscussionThread from "../components/TeacherDashboard/DiscussionThread";
+import { useCourses } from "../../context/CourseContext";
 
 const CourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { getCourseById } = useCourses();
+
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("lectures");
 
-  // Sample course data
-  const sampleCourse = {
-    id: parseInt(courseId),
-    title: "Introduction to Python Programming",
-    description:
-      "Learn Python from basics to advanced concepts including data structures, algorithms, and web development.",
-    duration: "12 weeks",
-    category: "Programming",
-    studentsCount: 42,
-    lecturesCount: 8,
-    assignmentsCount: 5,
-    discussionsCount: 12,
-    status: "active",
-    thumbnail:
-      "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=400&fit=crop",
-    instructor: "Dr. Sarah Johnson",
-    createdAt: "2024-01-15",
-  };
-
   useEffect(() => {
     fetchCourseData();
-  }, [courseId]);
+
+    // Set active tab based on current path
+    const pathParts = location.pathname.split("/");
+    const currentTab = pathParts[pathParts.length - 1];
+    if (["lectures", "assignments", "discussions"].includes(currentTab)) {
+      setActiveTab(currentTab);
+    }
+  }, [courseId, location.pathname]);
 
   const fetchCourseData = async () => {
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setCourse(sampleCourse);
+      // Try to get course from context first
+      const contextCourse = getCourseById(courseId);
+      if (contextCourse) {
+        setCourse(contextCourse);
+      } else {
+        // Fallback to sample data or API call
+        const sampleCourse = {
+          _id: courseId,
+          title: "Introduction to Python Programming",
+          description:
+            "Learn Python from basics to advanced concepts including data structures, algorithms, and web development.",
+          duration: "12 weeks",
+          category: "Programming",
+          studentsCount: 42,
+          lecturesCount: 8,
+          assignmentsCount: 5,
+          discussionsCount: 12,
+          status: "active",
+          thumbnailUrl:
+            "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=400&fit=crop",
+          instructor: "Dr. Sarah Johnson",
+          createdAt: "2024-01-15",
+        };
+        setCourse(sampleCourse);
+      }
     } catch (error) {
       console.error("Error fetching course:", error);
     } finally {
@@ -65,21 +80,21 @@ const CourseDetail = () => {
       id: "lectures",
       label: "Lectures",
       icon: <FaPlay className="w-4 h-4" />,
-      count: course?.lecturesCount || 0,
+      count: course?.lecturesCount || course?.lectures?.length || 0,
       path: "lectures",
     },
     {
       id: "assignments",
       label: "Assignments",
       icon: <FaClipboardList className="w-4 h-4" />,
-      count: course?.assignmentsCount || 0,
+      count: course?.assignmentsCount || course?.assignments?.length || 0,
       path: "assignments",
     },
     {
       id: "discussions",
       label: "Discussions",
       icon: <FaComments className="w-4 h-4" />,
-      count: course?.discussionsCount || 0,
+      count: course?.discussionsCount || course?.discussions?.length || 0,
       path: "discussions",
     },
   ];
@@ -97,6 +112,25 @@ const CourseDetail = () => {
           <div className="h-48 bg-gray-200 rounded mb-6"></div>
           <div className="h-10 bg-gray-200 rounded w-full"></div>
         </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="text-center py-16">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          Course not found
+        </h3>
+        <p className="text-gray-600 mb-4">
+          The course you're looking for doesn't exist or has been removed.
+        </p>
+        <button
+          onClick={() => navigate("/teacher/courses")}
+          className="bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition-colors"
+        >
+          Back to Courses
+        </button>
       </div>
     );
   }
@@ -122,9 +156,13 @@ const CourseDetail = () => {
       {/* Course Overview */}
       <div className="bg-white rounded-lg border overflow-hidden">
         <img
-          src={course.thumbnail}
+          src={course.thumbnailUrl || course.thumbnail}
           alt={course.title}
           className="w-full h-48 object-cover"
+          onError={(e) => {
+            e.target.src =
+              "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=400&fit=crop";
+          }}
         />
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -133,7 +171,7 @@ const CourseDetail = () => {
                 <FaUsers className="w-6 h-6 text-blue-600" />
               </div>
               <p className="text-2xl font-bold text-gray-900">
-                {course.studentsCount}
+                {course.studentsCount || course.enrolledStudents?.length || 0}
               </p>
               <p className="text-sm text-gray-600">Students</p>
             </div>
@@ -142,7 +180,7 @@ const CourseDetail = () => {
                 <FaPlay className="w-6 h-6 text-green-600" />
               </div>
               <p className="text-2xl font-bold text-gray-900">
-                {course.lecturesCount}
+                {course.lecturesCount || course.lectures?.length || 0}
               </p>
               <p className="text-sm text-gray-600">Lectures</p>
             </div>
@@ -151,7 +189,7 @@ const CourseDetail = () => {
                 <FaClipboardList className="w-6 h-6 text-purple-600" />
               </div>
               <p className="text-2xl font-bold text-gray-900">
-                {course.assignmentsCount}
+                {course.assignmentsCount || course.assignments?.length || 0}
               </p>
               <p className="text-sm text-gray-600">Assignments</p>
             </div>
@@ -160,7 +198,7 @@ const CourseDetail = () => {
                 <FaComments className="w-6 h-6 text-orange-600" />
               </div>
               <p className="text-2xl font-bold text-gray-900">
-                {course.discussionsCount}
+                {course.discussionsCount || course.discussions?.length || 0}
               </p>
               <p className="text-sm text-gray-600">Discussions</p>
             </div>
@@ -195,7 +233,7 @@ const CourseDetail = () => {
         {/* Tab Content */}
         <div className="p-6">
           <Routes>
-            <Route path="/" element={<Navigate to="lectures" replace />} />
+            <Route index element={<Navigate to="lectures" replace />} />
             <Route
               path="lectures"
               element={<CourseLectures courseId={courseId} course={course} />}
@@ -212,7 +250,6 @@ const CourseDetail = () => {
                 <CourseDiscussions courseId={courseId} course={course} />
               }
             />
-            {/* <Route path="discussion/:threadId" element={<DiscussionThread />} /> */}
           </Routes>
         </div>
       </div>

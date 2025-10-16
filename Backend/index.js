@@ -7,6 +7,7 @@ import dbConnection from "./config/db-connection.js";
 import userRoutes from "./routes/userRoutes.js";
 import cors from "cors";
 import teacherRoutes from "./routes/teacherRoutes.js";
+import courseRoute from "./routes/courseRoutes.js";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/", userRoutes);
+app.use("/", courseRoute);
 app.use("/teacher", teacherRoutes);
 
 app.get("/", (req, res) => {

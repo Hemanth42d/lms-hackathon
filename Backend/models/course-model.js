@@ -43,6 +43,12 @@ const courseSchema = mongoose.Schema({
       ref: "Discussion",
     },
   ],
+  price: {
+    type: String,
+  },
+  enrolled: {
+    type: Number,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
