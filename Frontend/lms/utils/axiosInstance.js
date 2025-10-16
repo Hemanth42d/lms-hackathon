@@ -9,4 +9,13 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.log("API Error:", error.response?.data || error.message);
+    console.log("Full URL:", error.config?.url);
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;

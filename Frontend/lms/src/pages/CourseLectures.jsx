@@ -10,6 +10,7 @@ import {
   FaExternalLinkAlt,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
+import axiosInstance from "../../utils/axiosInstance";
 
 const CourseLectures = ({ courseId, course }) => {
   const [lectures, setLectures] = useState([]);
@@ -93,15 +94,24 @@ const CourseLectures = ({ courseId, course }) => {
 
   const handleCreateLecture = async (e) => {
     e.preventDefault();
-    try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/courses/${courseId}/lectures`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
-      // const data = await response.json();
+    // TODO: Replace with actual API call
+    const postToServer = axiosInstance
+      .post(`/teacher/courses/${courseId}/lectures`, {
+        title: formData.title || "",
+        description: formData.description || "",
+        duration: formData.duration || "",
+        videoUrl: formData.videoUrl || "",
+        pdfUrl: formData.pdfUrl || "",
+        pptUrl: formData.pptUrl || "",
+      })
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
 
+    try {
       const newLecture = {
         id: Date.now(),
         ...formData,

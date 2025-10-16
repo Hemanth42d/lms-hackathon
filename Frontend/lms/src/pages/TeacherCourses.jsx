@@ -203,6 +203,7 @@ const TeacherCourses = () => {
       })
       .then((res) => {
         setShowModal(false);
+        console.log(res);
       })
       .catch((error) => {
         console.log(error);

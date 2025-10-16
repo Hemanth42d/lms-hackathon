@@ -38,20 +38,20 @@ const Login = () => {
       const response = await axiosInstance.post("/login", {
         email: formData.email,
         password: formData.password,
-        role: formData.role.toLowerCase(),
+        role: formData.role,
       });
 
       // Store token and user data
-      const { token, user } = response.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("userRole", user.role);
-      localStorage.setItem("userId", user._id);
-      localStorage.setItem("userName", user.userName);
+      // const { token, user } = response.data;
+      // localStorage.setItem("token", token);
+      // localStorage.setItem("userRole", user.role);
+      // localStorage.setItem("userId", user._id);
+      // localStorage.setItem("userName", user.userName);
 
       toast.success("Login successful!");
 
       // Navigate based on actual role from database
-      switch (user.role) {
+      switch (formData.role) {
         case "admin":
           navigate("/admin/dashboard");
           break;

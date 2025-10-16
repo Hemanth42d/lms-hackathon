@@ -56,7 +56,7 @@ export const registerUser = async (req, res) => {
     let token = generateToken(newUser);
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
@@ -64,8 +64,9 @@ export const registerUser = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Account created successfully",
+      token: token,
       user: {
-        id: newUser._id,
+        _id: newUser._id,
         userName: newUser.userName,
         email: newUser.email,
         role: newUser.role,
@@ -86,16 +87,24 @@ export const loginUser = async (req, res) => {
     if (!email || !password || !role) {
       return res.status(400).json({
         error: true,
-        message: "Email and password are required",
+        message: "Email, password, and role are required",
       });
     }
 
     const user = await userModel.findOne({ email });
 
-    if (!user || role != user.role) {
+    if (!user) {
       return res.status(404).json({
         error: true,
         message: "User does not exist. Please create a new account.",
+      });
+    }
+
+    // Case-insensitive role comparison
+    if (role.toLowerCase() !== user.role.toLowerCase()) {
+      return res.status(401).json({
+        error: true,
+        message: "Invalid role selected for this account.",
       });
     }
 
@@ -119,14 +128,16 @@ export const loginUser = async (req, res) => {
     return res.json({
       success: true,
       message: "Successfully logged in",
+      token: token,
       user: {
-        id: user._id,
+        _id: user._id,
         userName: user.userName,
         email: user.email,
         role: user.role,
       },
     });
   } catch (error) {
+    console.error("Login error:", error);
     return res.status(500).json({
       error: true,
       message: error.message,
