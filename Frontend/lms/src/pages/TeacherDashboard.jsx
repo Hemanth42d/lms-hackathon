@@ -13,82 +13,51 @@ import {
   FaPlus,
   FaEdit,
 } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext";
+import { teacherAPI } from "../../utils/api";
 
 const TeacherDashboard = () => {
+  const { token } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Sample data
-  const sampleData = {
-    stats: {
-      totalCourses: 8,
-      totalStudents: 245,
-      activeAssignments: 12,
-      pendingSubmissions: 38,
-    },
-    recentActivity: [
-      {
-        id: 1,
-        type: "submission",
-        student: "John Smith",
-        course: "Data Structures",
-        assignment: "Binary Tree Implementation",
-        timestamp: "2 hours ago",
-        status: "pending",
-        avatar:
-          "https://ui-avatars.com/api/?name=John+Smith&background=10b981&color=fff",
-      },
-      {
-        id: 2,
-        type: "submission",
-        student: "Emma Davis",
-        course: "Machine Learning",
-        assignment: "Neural Network Project",
-        timestamp: "4 hours ago",
-        status: "graded",
-        grade: "A-",
-        avatar:
-          "https://ui-avatars.com/api/?name=Emma+Davis&background=f59e0b&color=fff",
-      },
-      {
-        id: 3,
-        type: "enrollment",
-        student: "Mike Chen",
-        course: "Web Development",
-        timestamp: "1 day ago",
-        status: "new",
-        avatar:
-          "https://ui-avatars.com/api/?name=Mike+Chen&background=ef4444&color=fff",
-      },
-      {
-        id: 4,
-        type: "submission",
-        student: "Lisa Rodriguez",
-        course: "Database Design",
-        assignment: "E-commerce Database Schema",
-        timestamp: "1 day ago",
-        status: "late",
-        avatar:
-          "https://ui-avatars.com/api/?name=Lisa+Rodriguez&background=8b5cf6&color=fff",
-      },
-    ],
-  };
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      if (!token) return;
+
       setLoading(true);
+      setError("");
+
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setDashboardData(sampleData);
+        const response = await teacherAPI.getDashboardStats(token);
+
+        if (response.success) {
+          setDashboardData(response);
+        } else {
+          throw new Error(response.message || "Failed to fetch data");
+        }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
+        setError(`Failed to load dashboard data: ${error.message}`);
+
+        // Fallback to empty data structure
+        setDashboardData({
+          stats: {
+            totalCourses: 0,
+            totalStudents: 0,
+            activeAssignments: 0,
+            pendingSubmissions: 0,
+          },
+          recentActivity: [],
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, []);
+  }, [token]);
 
   // Loading skeleton components
   const StatCardSkeleton = () => (
@@ -142,6 +111,13 @@ const TeacherDashboard = () => {
 
   return (
     <div className="space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {loading
@@ -196,9 +172,9 @@ const TeacherDashboard = () => {
                   </div>
                 </div>
                 <div className="mt-4 flex items-center">
-                  <div className="flex items-center text-sm text-green-600">
+                  <div className="flex items-center text-sm text-gray-500">
                     <FaChartLine className="w-4 h-4 mr-1" />
-                    <span>+12% from last month</span>
+                    <span>Real-time data</span>
                   </div>
                 </div>
               </div>
@@ -259,90 +235,101 @@ const TeacherDashboard = () => {
           </div>
 
           <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-            {loading
-              ? Array.from({ length: 4 }).map((_, index) => (
-                  <ActivitySkeleton key={index} />
-                ))
-              : dashboardData?.recentActivity.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="p-4 hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="relative">
-                        <img
-                          src={activity.avatar}
-                          alt={activity.student}
-                          className="w-10 h-10 rounded-full"
-                        />
-                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
-                          <div className="text-gray-600">
-                            {getActivityIcon(activity.type)}
-                          </div>
+            {loading ? (
+              Array.from({ length: 4 }).map((_, index) => (
+                <ActivitySkeleton key={index} />
+              ))
+            ) : dashboardData?.recentActivity?.length > 0 ? (
+              dashboardData.recentActivity.map((activity) => (
+                <div
+                  key={activity.id}
+                  className="p-4 hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="relative">
+                      <img
+                        src={activity.avatar}
+                        alt={activity.student}
+                        className="w-10 h-10 rounded-full"
+                      />
+                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
+                        <div className="text-gray-600">
+                          {getActivityIcon(activity.type)}
                         </div>
                       </div>
+                    </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {activity.student}
-                          </p>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                              activity.status
-                            )}`}
-                          >
-                            {activity.status}
-                          </span>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {activity.type === "submission" && (
-                            <>
-                              Submitted{" "}
-                              <span className="font-medium">
-                                {activity.assignment}
-                              </span>{" "}
-                              for{" "}
-                              <span className="font-medium">
-                                {activity.course}
-                              </span>
-                              {activity.grade && (
-                                <span className="ml-2 text-green-600 font-medium">
-                                  Grade: {activity.grade}
-                                </span>
-                              )}
-                            </>
-                          )}
-                          {activity.type === "enrollment" && (
-                            <>
-                              Enrolled in{" "}
-                              <span className="font-medium">
-                                {activity.course}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-500 flex items-center">
-                          <FaCalendarAlt className="w-3 h-3 mr-1" />
-                          {activity.timestamp}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {activity.student}
+                        </p>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                            activity.status
+                          )}`}
+                        >
+                          {activity.status}
                         </span>
+                      </div>
+                      <div className="text-sm text-gray-600">
                         {activity.type === "submission" && (
-                          <div className="flex space-x-1">
-                            <button className="p-2 text-gray-400 hover:text-indigo-600 transition-colors">
-                              <FaEye className="w-4 h-4" />
-                            </button>
-                            <button className="p-2 text-gray-400 hover:text-indigo-600 transition-colors">
-                              <FaDownload className="w-4 h-4" />
-                            </button>
-                          </div>
+                          <>
+                            Submitted{" "}
+                            <span className="font-medium">
+                              {activity.assignment}
+                            </span>{" "}
+                            for{" "}
+                            <span className="font-medium">
+                              {activity.course}
+                            </span>
+                            {activity.grade && (
+                              <span className="ml-2 text-green-600 font-medium">
+                                Grade: {activity.grade}
+                              </span>
+                            )}
+                          </>
+                        )}
+                        {activity.type === "enrollment" && (
+                          <>
+                            Enrolled in{" "}
+                            <span className="font-medium">
+                              {activity.course}
+                            </span>
+                          </>
                         )}
                       </div>
                     </div>
+
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500 flex items-center">
+                        <FaCalendarAlt className="w-3 h-3 mr-1" />
+                        {activity.timestamp}
+                      </span>
+                      {activity.type === "submission" && (
+                        <div className="flex space-x-1">
+                          <button className="p-2 text-gray-400 hover:text-indigo-600 transition-colors">
+                            <FaEye className="w-4 h-4" />
+                          </button>
+                          <button className="p-2 text-gray-400 hover:text-indigo-600 transition-colors">
+                            <FaDownload className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                ))}
+                </div>
+              ))
+            ) : (
+              <div className="p-8 text-center text-gray-500">
+                <FaBell className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium">No recent activity</p>
+                <p className="text-sm">
+                  Activity will appear here as students interact with your
+                  courses
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

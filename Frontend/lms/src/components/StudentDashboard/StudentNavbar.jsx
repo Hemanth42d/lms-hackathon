@@ -1,8 +1,10 @@
 import { FaBars, FaSearch, FaBell, FaEnvelope } from "react-icons/fa";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../../context/AuthContext";
 
 const StudentNavbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-md z-40 h-16">
@@ -61,7 +63,12 @@ const StudentNavbar = ({ toggleSidebar }) => {
           {/* Profile */}
           <div className="flex items-center space-x-2 cursor-pointer">
             <img
-              src="https://ui-avatars.com/api/?name=Student+User&background=3b82f6&color=fff"
+              src={
+                user?.profileImage ||
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  user?.userName || "Student"
+                )}&background=3b82f6&color=fff`
+              }
               alt="Profile"
               className="w-8 h-8 rounded-full"
             />

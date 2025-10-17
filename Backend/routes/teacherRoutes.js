@@ -16,8 +16,13 @@ import {
   toggleAssignmentStatus,
   updateAssignment,
 } from "../controllers/assignmentControllers.js";
+import { getTeacherStats } from "../controllers/TeacherControllers.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+// Dashboard stats
+router.get("/dashboard-stats", authenticateToken, getTeacherStats);
 
 router.get("/get-all-courses", getCourses);
 router.get("/courses/:courseId/lectures", getLectures);
