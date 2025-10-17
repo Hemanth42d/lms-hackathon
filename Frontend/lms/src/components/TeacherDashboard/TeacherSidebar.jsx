@@ -10,17 +10,22 @@ import {
   FaGraduationCap,
   FaCalendarAlt,
 } from "react-icons/fa";
+import { useAuth } from "../../../context/AuthContext";
 
 const TeacherSidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  // Sample teacher data
+  // Get teacher data from auth context
   const teacherData = {
-    name: "Dr. Sarah Johnson",
-    title: "Computer Science Professor",
+    name: user?.userName || "Teacher",
+    title: user?.department ? `${user.department} Department` : "Teacher",
     avatar:
-      "https://ui-avatars.com/api/?name=Dr+Sarah+Johnson&size=200&background=3b82f6&color=fff",
+      user?.profileImage ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        user?.userName || "Teacher"
+      )}&size=200&background=3b82f6&color=fff`,
   };
 
   const sidebarItems = [
@@ -47,7 +52,7 @@ const TeacherSidebar = ({ isOpen, onClose }) => {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     navigate("/login");
   };
 

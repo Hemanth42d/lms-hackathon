@@ -41,6 +41,7 @@ export const updateUserProfile = async (req, res) => {
       country,
       bio,
       profileImage,
+      department,
     } = req.body;
 
     const updateData = {
@@ -60,6 +61,7 @@ export const updateUserProfile = async (req, res) => {
     if (country !== undefined) updateData.country = country;
     if (bio !== undefined) updateData.bio = bio;
     if (profileImage !== undefined) updateData.profileImage = profileImage;
+    if (department !== undefined) updateData.department = department;
 
     const updatedUser = await userModel
       .findByIdAndUpdate(req.user._id, updateData, {

@@ -9,9 +9,11 @@ import {
   FaTimes,
   FaSignOutAlt,
 } from "react-icons/fa";
+import { useAuth } from "../../../context/AuthContext";
 
 const StudentSidebar = ({ sidebarOpen, toggleSidebar }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const menuItems = [
     {
@@ -42,13 +44,8 @@ const StudentSidebar = ({ sidebarOpen, toggleSidebar }) => {
   ];
 
   const handleLogout = () => {
-    // Add your logout logic here
-    // For example: clear tokens, call logout API, etc.
     if (window.confirm("Are you sure you want to logout?")) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      // You can also call your logout API here
-      // await axiosInstance.post("/logout");
+      logout();
       navigate("/login");
     }
   };

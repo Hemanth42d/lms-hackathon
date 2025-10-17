@@ -2,17 +2,22 @@ import { useState } from "react";
 import { Outlet } from "react-router";
 import { FaBell, FaBars } from "react-icons/fa";
 import TeacherSidebar from "./TeacherSidebar";
+import { useAuth } from "../../../context/AuthContext";
 
 const TeacherDashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user } = useAuth();
 
-  // Sample teacher data
+  // Get teacher data from auth context
   const teacherData = {
-    name: "Dr. Sarah Johnson",
-    title: "Computer Science Professor",
+    name: user?.userName || "Teacher",
+    title: user?.department ? `${user.department} Department` : "Teacher",
     avatar:
-      "https://ui-avatars.com/api/?name=Dr+Sarah+Johnson&size=200&background=3b82f6&color=fff",
-    email: "sarah.johnson@university.edu",
+      user?.profileImage ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        user?.userName || "Teacher"
+      )}&size=200&background=3b82f6&color=fff`,
+    email: user?.email || "teacher@example.com",
   };
 
   const toggleSidebar = () => {

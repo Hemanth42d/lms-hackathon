@@ -60,4 +60,14 @@ export const userAPI = {
     }),
 };
 
+// Teacher API functions
+export const teacherAPI = {
+  // Get teacher dashboard stats
+  getDashboardStats: (token) =>
+    apiCall("/teacher/dashboard-stats", {
+      method: "GET",
+      token,
+    }),
+};
+
 export default apiCall;

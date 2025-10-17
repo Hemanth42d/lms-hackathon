@@ -13,7 +13,7 @@ import { useAuth } from "../../context/AuthContext";
 import { userAPI } from "../../utils/api";
 
 const StudentSettings = () => {
-  const { user, token, setUser } = useAuth();
+  const { token, setUser } = useAuth();
 
   // Active tab state
   const [activeTab, setActiveTab] = useState("profile");
