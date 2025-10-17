@@ -39,12 +39,7 @@ const TeacherCourses = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Fetch courses if not already loaded
-    if (courses.length === 0 && !contextLoading) {
-      fetchCourses();
-    }
-  }, [courses.length, contextLoading, fetchCourses]);
+  // No fetchCourses on mount/useEffect. CourseContext handles initial fetch.
 
   useEffect(() => {
     const onEnrollmentUpdated = () => {
@@ -91,7 +86,12 @@ const TeacherCourses = () => {
 
   const handleDeleteCourse = async (courseId) => {
     if (!courseId) return;
-    if (!window.confirm("Are you sure you want to delete this course? This cannot be undone.")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this course? This cannot be undone."
+      )
+    )
+      return;
     try {
       await axiosInstance.delete(`/teacher/courses/${courseId}`);
       toast.success("Course deleted successfully");
@@ -258,7 +258,9 @@ const TeacherCourses = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active Courses</p>
-              <p className="text-2xl font-bold text-gray-900">{courses.length}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {courses.length}
+              </p>
             </div>
             <FaEye className="w-8 h-8 text-green-600" />
           </div>

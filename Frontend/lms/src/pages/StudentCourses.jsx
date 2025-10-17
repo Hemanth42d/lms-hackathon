@@ -8,6 +8,7 @@ import Pagination from "../components/StudentDashboard/Pagination";
 import { useCourses } from "../../context/CourseContext";
 
 const StudentCourses = () => {
+  // No fetchCourses on mount/useEffect. CourseContext handles initial fetch.
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,9 +68,13 @@ const StudentCourses = () => {
         const userId =
           user?._id || JSON.parse(localStorage.getItem("user") || "null")?._id;
         if (!userId) return;
-        const { data } = await axiosInstance.get(`/my-courses`, { params: { userId } });
+        const { data } = await axiosInstance.get(`/my-courses`, {
+          params: { userId },
+        });
         if (!isMounted) return;
-        const ids = new Set((data?.courses || []).map((c) => c.courseId || c.id));
+        const ids = new Set(
+          (data?.courses || []).map((c) => c.courseId || c.id)
+        );
         setEnrolledIds(ids);
       } catch (_) {}
     };

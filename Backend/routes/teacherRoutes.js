@@ -41,6 +41,8 @@ router.post("/courses/add-new-course", authenticateToken, createcourse);
 router.post("/courses/:courseId/assignments", createAssignment);
 router.post("/courses/:courseId/lectures", addLectures);
 
+import { updateCourse } from "../controllers/CourseControllers.js";
+router.put("/courses/:courseId", authenticateToken, updateCourse);
 router.put("/lectures/:lectureId", updateLecture);
 router.put("/assignments/:assignmentId", updateAssignment);
 

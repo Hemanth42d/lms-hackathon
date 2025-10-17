@@ -39,11 +39,6 @@ const TeacherSidebar = ({ isOpen, onClose }) => {
       icon: <FaBookOpen className="w-5 h-5" />,
     },
     {
-      name: "Messages",
-      path: "/teacher/messages",
-      icon: <FaComments className="w-5 h-5" />,
-    },
-    {
       name: "Profile",
       path: "/teacher/profile",
       icon: <FaUser className="w-5 h-5" />,

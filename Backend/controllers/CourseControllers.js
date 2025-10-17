@@ -1,3 +1,30 @@
+// Update a course (PUT /teacher/courses/:courseId)
+export const updateCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { title, description, category, thumbnailUrl, duration } = req.body;
+    const course = await courseModel.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: true, message: "Course not found" });
+    }
+    if (title !== undefined) course.title = title;
+    if (description !== undefined) course.description = description;
+    if (category !== undefined) course.category = category;
+    if (thumbnailUrl !== undefined) course.thumbnailUrl = thumbnailUrl;
+    if (duration !== undefined) course.duration = duration;
+    await course.save();
+    const populatedCourse = await courseModel
+      .findById(courseId)
+      .populate({ path: "instructor", select: "userName email" });
+    return res.json({
+      success: true,
+      message: "Course updated successfully",
+      course: populatedCourse,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: true, message: error.message });
+  }
+};
 import courseModel from "../models/course-model.js";
 import lectureModel from "../models/lecture-model.js";
 import enrollmentModel from "../models/enrollment-model.js";
@@ -46,33 +73,70 @@ export const createcourse = async (req, res) => {
 
 export const getCourses = async (req, res) => {
   try {
-    const courses = await courseModel
-      .find({})
-      .populate({ path: "instructor", select: "userName email" })
-      .lean();
-
-    const courseIds = (courses || []).map((c) => c._id);
-    let countsByCourse = {};
-    if (courseIds.length) {
-      const agg = await enrollmentModel.aggregate([
-        { $match: { course: { $in: courseIds } } },
-        { $group: { _id: "$course", count: { $sum: 1 } } },
-      ]);
-      countsByCourse = Object.fromEntries(agg.map((a) => [String(a._id), a.count]));
+    // Fetch all courses and populate instructor details, handle missing/invalid instructor gracefully
+    let courses = [];
+    try {
+      courses = await courseModel
+        .find({})
+        .populate({
+          path: "instructor",
+          select: "_id userName email role profileImage",
+        })
+        .lean();
+    } catch (err) {
+      console.error("Error populating instructor in getCourses:", err);
+      // fallback: fetch without populate
+      courses = await courseModel.find({}).lean();
     }
 
-    const withCounts = (courses || []).map((c) => ({
-      ...c,
-      studentsCount: countsByCourse[String(c._id)] || 0,
+    // For each course, count enrolled students
+    const courseIds = courses.map((c) => c._id);
+    let users = [];
+    try {
+      users = await userModel
+        .find({ enrolledCourses: { $in: courseIds } }, "enrolledCourses")
+        .lean();
+    } catch (err) {
+      console.error(
+        "Error fetching users for student count in getCourses:",
+        err
+      );
+    }
+    const studentCountMap = {};
+    users.forEach((user) => {
+      (user.enrolledCourses || []).forEach((cid) => {
+        const id = String(cid);
+        studentCountMap[id] = (studentCountMap[id] || 0) + 1;
+      });
+    });
+
+    const result = courses.map((course) => ({
+      ...course,
+      studentsCount: studentCountMap[String(course._id)] || 0,
+      assignmentsCount: Array.isArray(course.assignments)
+        ? course.assignments.length
+        : 0,
+      discussionsCount: Array.isArray(course.discussions)
+        ? course.discussions.length
+        : 0,
+      lecturesCount: Array.isArray(course.lectures)
+        ? course.lectures.length
+        : 0,
     }));
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Courses fetched successfully",
-      courses: withCounts,
+      courses: result,
     });
   } catch (error) {
-    res.json({ error: true, message: error.message });
+    console.error("getCourses error:", error);
+    res.status(200).json({
+      success: false,
+      error: true,
+      courses: [],
+      message: error.message || "Unknown error in getCourses",
+    });
   }
 };
 
@@ -160,17 +224,6 @@ export const enrollInCourse = async (req, res) => {
       return res.status(404).json({ error: true, message: "Course not found" });
     }
 
-<<<<<<< HEAD
-    const existing = await enrollmentModel.findOne({ user: userId, course: courseId });
-    if (existing) {
-      // Ensure user doc is in sync but do not create duplicate enrollment
-      await userModel.findByIdAndUpdate(
-        userId,
-        { $addToSet: { enrolledCourses: courseId } },
-        { new: true }
-      );
-      return res.status(200).json({ success: true, alreadyEnrolled: true, message: "User already enrolled" });
-=======
     const existing = await enrollmentModel.findOne({
       user: userId,
       course: courseId,
@@ -181,9 +234,7 @@ export const enrollInCourse = async (req, res) => {
         course: courseId,
         progress: 0,
       });
->>>>>>> 6f79129 (updated password change and profile integration with the frontend)
     }
-    await enrollmentModel.create({ user: userId, course: courseId, progress: 0 });
     await userModel.findByIdAndUpdate(
       userId,
       { $addToSet: { enrolledCourses: courseId } },
@@ -200,7 +251,15 @@ export const enrollInCourse = async (req, res) => {
 export const addLectures = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const { title, description, duration, videoUrl, pdfUrl, pptUrl, transcriptUrl } = req.body;
+    const {
+      title,
+      description,
+      duration,
+      videoUrl,
+      pdfUrl,
+      pptUrl,
+      transcriptUrl,
+    } = req.body;
 
     if (!title || !description || !videoUrl) {
       return res.json({
@@ -276,7 +335,15 @@ export const getLectures = async (req, res) => {
 export const updateLecture = async (req, res) => {
   try {
     const { lectureId } = req.params;
-    const { title, description, duration, videoUrl, pdfUrl, pptUrl, transcriptUrl } = req.body;
+    const {
+      title,
+      description,
+      duration,
+      videoUrl,
+      pdfUrl,
+      pptUrl,
+      transcriptUrl,
+    } = req.body;
 
     const lecture = await lectureModel.findById(lectureId);
     if (!lecture) {
@@ -296,7 +363,8 @@ export const updateLecture = async (req, res) => {
         videoUrl: videoUrl || lecture.videoUrl,
         pdfUrl: pdfUrl !== undefined ? pdfUrl : lecture.pdfUrl,
         pptUrl: pptUrl !== undefined ? pptUrl : lecture.pptUrl,
-        transcriptUrl: transcriptUrl !== undefined ? transcriptUrl : lecture.transcriptUrl,
+        transcriptUrl:
+          transcriptUrl !== undefined ? transcriptUrl : lecture.transcriptUrl,
       },
       { new: true }
     );
