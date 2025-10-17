@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FaUser,
   FaLock,
@@ -7,12 +7,19 @@ import {
   FaEye,
   FaEyeSlash,
   FaCheck,
+  FaSpinner,
 } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext";
+import { userAPI } from "../../utils/api";
 
 const StudentSettings = () => {
+  const { user, token, setUser } = useAuth();
+
   // Active tab state
   const [activeTab, setActiveTab] = useState("profile");
   const [saveMessage, setSaveMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [showPassword, setShowPassword] = useState({
     current: false,
     new: false,
@@ -21,19 +28,19 @@ const StudentSettings = () => {
 
   // Profile Settings State
   const [profileData, setProfileData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@example.com",
-    phone: "+1 234 567 8900",
-    dateOfBirth: "1998-05-15",
-    address: "123 Main Street",
-    city: "New York",
-    state: "NY",
-    zipCode: "10001",
-    country: "United States",
-    bio: "Computer Science student passionate about machine learning and data science.",
-    profileImage:
-      "https://ui-avatars.com/api/?name=John+Doe&size=200&background=3b82f6&color=fff",
+    userName: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dateOfBirth: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "",
+    bio: "",
+    profileImage: "",
   });
 
   // Password Settings State
@@ -42,6 +49,53 @@ const StudentSettings = () => {
     newPassword: "",
     confirmPassword: "",
   });
+
+  // Load user profile data on component mount
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!token) return;
+
+      try {
+        setInitialLoading(true);
+        const response = await userAPI.getProfile(token);
+
+        if (response.success) {
+          const userData = response.user;
+          setProfileData({
+            userName: userData.userName || "",
+            firstName: userData.firstName || "",
+            lastName: userData.lastName || "",
+            email: userData.email || "",
+            phone: userData.phone || "",
+            dateOfBirth: userData.dateOfBirth
+              ? userData.dateOfBirth.split("T")[0]
+              : "",
+            address: userData.address || "",
+            city: userData.city || "",
+            state: userData.state || "",
+            zipCode: userData.zipCode || "",
+            country: userData.country || "",
+            bio: userData.bio || "",
+            profileImage:
+              userData.profileImage ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                userData.firstName && userData.lastName
+                  ? `${userData.firstName} ${userData.lastName}`
+                  : userData.userName || "User"
+              )}&size=200&background=3b82f6&color=fff`,
+          });
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+        setSaveMessage("Error loading profile data");
+        setTimeout(() => setSaveMessage(""), 3000);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, [token]);
 
   // Handlers
   const handleProfileChange = (e) => {
@@ -60,25 +114,28 @@ const StudentSettings = () => {
     }));
   };
 
-  // Save Functions (Ready for API integration)
+  // Save Functions
   const handleSaveProfile = async () => {
-    try {
-      // API call would go here
-      // const response = await fetch('/api/student/profile', {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify(profileData)
-      // });
+    if (!token) {
+      setSaveMessage("Authentication required");
+      return;
+    }
 
-      setSaveMessage("Profile updated successfully!");
-      setTimeout(() => setSaveMessage(""), 3000);
-      console.log("Saving profile:", profileData);
+    try {
+      setLoading(true);
+      const response = await userAPI.updateProfile(profileData, token);
+
+      if (response.success) {
+        setSaveMessage("Profile updated successfully!");
+        // Update user context with new data
+        setUser(response.user);
+      }
     } catch (error) {
       console.error("Error saving profile:", error);
-      setSaveMessage("Error updating profile");
+      setSaveMessage(error.message || "Error updating profile");
+    } finally {
+      setLoading(false);
+      setTimeout(() => setSaveMessage(""), 3000);
     }
   };
 
@@ -89,28 +146,41 @@ const StudentSettings = () => {
       return;
     }
 
-    try {
-      // API call would go here
-      // const response = await fetch('/api/student/change-password', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify(passwordData)
-      // });
-
-      setSaveMessage("Password updated successfully!");
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
+    if (passwordData.newPassword.length < 8) {
+      setSaveMessage("Password must be at least 8 characters long!");
       setTimeout(() => setSaveMessage(""), 3000);
-      console.log("Saving password:", passwordData);
+      return;
+    }
+
+    if (!token) {
+      setSaveMessage("Authentication required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await userAPI.changePassword(
+        {
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        },
+        token
+      );
+
+      if (response.success) {
+        setSaveMessage("Password updated successfully!");
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      }
     } catch (error) {
       console.error("Error saving password:", error);
-      setSaveMessage("Error updating password");
+      setSaveMessage(error.message || "Error updating password");
+    } finally {
+      setLoading(false);
+      setTimeout(() => setSaveMessage(""), 3000);
     }
   };
 
@@ -133,6 +203,17 @@ const StudentSettings = () => {
     { id: "profile", name: "Profile", icon: <FaUser className="w-5 h-5" /> },
     { id: "password", name: "Password", icon: <FaLock className="w-5 h-5" /> },
   ];
+
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="flex items-center space-x-2">
+          <FaSpinner className="w-6 h-6 animate-spin text-blue-600" />
+          <span className="text-gray-600">Loading profile...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -233,26 +314,12 @@ const StudentSettings = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      First Name *
+                      Full Name *
                     </label>
                     <input
                       type="text"
-                      name="firstName"
-                      value={profileData.firstName}
-                      onChange={handleProfileChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Last Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={profileData.lastName}
+                      name="userName"
+                      value={profileData.userName}
                       onChange={handleProfileChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
@@ -268,9 +335,14 @@ const StudentSettings = () => {
                       name="email"
                       value={profileData.email}
                       onChange={handleProfileChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
                       required
+                      disabled
+                      title="Email cannot be changed"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Email cannot be changed
+                    </p>
                   </div>
 
                   <div>
@@ -382,10 +454,15 @@ const StudentSettings = () => {
                 <div className="flex justify-end">
                   <button
                     onClick={handleSaveProfile}
-                    className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md hover:shadow-lg"
+                    disabled={loading}
+                    className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <FaSave className="w-4 h-4" />
-                    <span>Save Changes</span>
+                    {loading ? (
+                      <FaSpinner className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FaSave className="w-4 h-4" />
+                    )}
+                    <span>{loading ? "Saving..." : "Save Changes"}</span>
                   </button>
                 </div>
               </div>
@@ -521,10 +598,15 @@ const StudentSettings = () => {
                 <div className="flex justify-end">
                   <button
                     onClick={handleSavePassword}
-                    className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md hover:shadow-lg"
+                    disabled={loading}
+                    className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <FaSave className="w-4 h-4" />
-                    <span>Update Password</span>
+                    {loading ? (
+                      <FaSpinner className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FaSave className="w-4 h-4" />
+                    )}
+                    <span>{loading ? "Updating..." : "Update Password"}</span>
                   </button>
                 </div>
               </div>
