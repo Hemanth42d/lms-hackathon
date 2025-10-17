@@ -9,7 +9,6 @@ import {
   FaTimes,
   FaGraduationCap,
   FaCalendarAlt,
-  FaComments,
 } from "react-icons/fa";
 
 const TeacherSidebar = ({ isOpen, onClose }) => {
@@ -34,11 +33,6 @@ const TeacherSidebar = ({ isOpen, onClose }) => {
       name: "My Courses",
       path: "/teacher/courses",
       icon: <FaBookOpen className="w-5 h-5" />,
-    },
-    {
-      name: "Messages",
-      path: "/teacher/messages",
-      icon: <FaComments className="w-5 h-5" />,
     },
     {
       name: "Profile",

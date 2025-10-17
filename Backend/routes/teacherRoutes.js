@@ -6,6 +6,7 @@ import {
   deleteLecture,
   createcourse,
   getCourses,
+  deleteCourse,
 } from "../controllers/CourseControllers.js";
 import {
   createAssignment,
@@ -32,6 +33,7 @@ router.put("/assignments/:assignmentId", updateAssignment);
 
 router.delete("/courses/:courseId/lectures/:lectureId", deleteLecture);
 router.delete("/courses/:courseId/assignments/:assignmentId", deleteAssignment);
+router.delete("/courses/:courseId", deleteCourse);
 
 router.patch(
   "/assignments/:assignmentId/toggle-status",

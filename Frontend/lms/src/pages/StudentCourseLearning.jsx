@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInstance";
 import {
   FaPlay,
   FaCheckCircle,
@@ -32,189 +33,153 @@ const StudentCourseLearning = () => {
   const [bookmarkedLessons, setBookmarkedLessons] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
-  // Sample course data
-  const courseData = {
-    id: courseId,
-    title: "Introduction to Python Programming",
-    instructor: "Alex Turner",
-    description: "Master Python programming from basics to advanced concepts",
-    totalDuration: "4 hours 30 minutes",
-    studentsEnrolled: "12,543",
-    rating: 4.8,
-    progress: 65,
-    lessons: [
-      {
-        id: 1,
-        title: "Introduction to Python",
-        duration: "15:30",
-        videoUrl:
-          "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-        completed: true,
-        description:
-          "Overview of Python programming language and its applications",
-        resources: [
-          { name: "Python Installation Guide", type: "pdf" },
-          { name: "Course Slides", type: "pptx" },
-        ],
-      },
-      {
-        id: 2,
-        title: "Python Basics and Syntax",
-        duration: "22:45",
-        videoUrl:
-          "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-        completed: true,
-        description: "Learn basic Python syntax, variables, and data types",
-        resources: [
-          { name: "Code Examples", type: "zip" },
-          { name: "Practice Exercises", type: "pdf" },
-        ],
-      },
-      {
-        id: 3,
-        title: "Variables and Data Types",
-        duration: "18:20",
-        videoUrl:
-          "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-        completed: true,
-        description: "Understanding different data types in Python",
-        resources: [{ name: "Data Types Cheatsheet", type: "pdf" }],
-      },
-      {
-        id: 4,
-        title: "Control Structures",
-        duration: "25:15",
-        videoUrl:
-          "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4",
-        completed: false,
-        description: "If statements, loops, and conditional logic",
-        resources: [
-          { name: "Control Flow Examples", type: "py" },
-          { name: "Exercise Solutions", type: "zip" },
-        ],
-      },
-      {
-        id: 5,
-        title: "Functions and Methods",
-        duration: "30:45",
-        videoUrl:
-          "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
-        completed: false,
-        description: "Creating and using functions in Python",
-        resources: [
-          { name: "Function Templates", type: "py" },
-          { name: "Best Practices Guide", type: "pdf" },
-        ],
-      },
-    ],
-  };
-
-  // Sample discussion data
-  const discussionData = [
-    {
-      id: 1,
-      user: "Sarah Johnson",
-      avatar:
-        "https://ui-avatars.com/api/?name=Sarah+Johnson&background=3b82f6&color=fff",
-      message:
-        "Great explanation of Python syntax! I'm finally understanding how variables work.",
-      timestamp: "2 hours ago",
-      likes: 12,
-      replies: [
-        {
-          id: 1,
-          user: "Mike Chen",
-          avatar:
-            "https://ui-avatars.com/api/?name=Mike+Chen&background=10b981&color=fff",
-          message: "I agree! The examples really helped clarify things.",
-          timestamp: "1 hour ago",
-          likes: 3,
-        },
-      ],
-    },
-    {
-      id: 2,
-      user: "Alex Rodriguez",
-      avatar:
-        "https://ui-avatars.com/api/?name=Alex+Rodriguez&background=f59e0b&color=fff",
-      message:
-        "Has anyone tried the practice exercises? I'm stuck on question 3.",
-      timestamp: "4 hours ago",
-      likes: 8,
-      replies: [],
-    },
-    {
-      id: 3,
-      user: "Emma Davis",
-      avatar:
-        "https://ui-avatars.com/api/?name=Emma+Davis&background=ef4444&color=fff",
-      message:
-        "The video quality is excellent and the pacing is perfect for beginners!",
-      timestamp: "1 day ago",
-      likes: 15,
-      replies: [],
-    },
-  ];
-
-  // Sample assignments data
-  const assignmentsData = [
-    {
-      id: 1,
-      title: "Python Basics Quiz",
-      description: "Test your understanding of Python fundamentals",
-      dueDate: "2024-10-25",
-      status: "completed",
-      score: "95%",
-      totalQuestions: 20,
-      timeLimit: "30 minutes",
-      attempts: 1,
-      maxAttempts: 3,
-    },
-    {
-      id: 2,
-      title: "Variables and Data Types Assignment",
-      description: "Create a Python program using different data types",
-      dueDate: "2024-10-30",
-      status: "pending",
-      totalQuestions: 5,
-      timeLimit: "2 hours",
-      attempts: 0,
-      maxAttempts: 2,
-    },
-    {
-      id: 3,
-      title: "Control Structures Project",
-      description: "Build a simple calculator using if statements and loops",
-      dueDate: "2024-11-05",
-      status: "not_started",
-      totalQuestions: 1,
-      timeLimit: "No limit",
-      attempts: 0,
-      maxAttempts: 1,
-    },
-  ];
-
-  const currentLesson = courseData.lessons[currentVideoIndex];
-  const completedCount = courseData.lessons.filter(
-    (lesson) => lesson.completed
-  ).length;
-  const progressPercentage = (completedCount / courseData.lessons.length) * 100;
+  const [courseData, setCourseData] = useState({ id: courseId, title: "", instructor: "", description: "", lessons: [], rating: 0, studentsEnrolled: 0, progress: 0 });
+  const [discussionData, setDiscussionData] = useState([]);
+  const [assignmentsData, setAssignmentsData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryText, setSummaryText] = useState("");
 
   useEffect(() => {
-    const completed = courseData.lessons
-      .filter((lesson) => lesson.completed)
-      .map((lesson) => lesson.id);
+    let isMounted = true;
+    const fetchAll = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [lectRes, assnRes, discRes, allCourses] = await Promise.all([
+          axiosInstance.get(`/course/${courseId}/lectures`),
+          axiosInstance.get(`/course/${courseId}/assignments`),
+          axiosInstance.get(`/course/${courseId}/discussions`),
+          axiosInstance.get(`/get-all-courses`),
+        ]);
+        if (!isMounted) return;
+        const course = (allCourses.data?.courses || []).find((c) => (c._id || c.id) === courseId);
+        const lessons = (lectRes.data?.lectures || []).map((l, idx) => ({
+          id: l._id || idx,
+          title: l.title,
+          duration: l.duration || "",
+          videoUrl: l.videoUrl,
+          completed: false,
+          description: l.description || "",
+          resources: [
+            ...(l.pdfUrl ? [{ name: "PDF", type: "pdf", url: l.pdfUrl }] : []),
+            ...(l.pptUrl ? [{ name: "PPT", type: "pptx", url: l.pptUrl }] : []),
+          ],
+        }));
+        setCourseData({
+          id: courseId,
+          title: course?.title || "",
+          instructor: (typeof course?.instructor === "object" ? course?.instructor?.userName : course?.instructor) || "",
+          description: course?.description || "",
+          lessons,
+          rating: course?.rating || 0,
+          studentsEnrolled: course?.studentsCount || 0,
+          progress: 0,
+        });
+        setAssignmentsData(Array.isArray(assnRes.data?.assignments) ? assnRes.data.assignments : []);
+        setDiscussionData(Array.isArray(discRes.data?.discussions) ? discRes.data.discussions.map((d) => ({
+          id: d._id,
+          user: d.author?.userName || "",
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(d.author?.userName || "U")}`,
+          message: d.content,
+          timestamp: new Date(d.createdAt).toLocaleString(),
+          likes: 0,
+          replies: (d.replies || []).map((r, i) => ({
+            id: i,
+            user: r.author?.userName || "",
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(r.author?.userName || "U")}`,
+            message: r.content,
+            timestamp: new Date(r.createdAt).toLocaleString(),
+            likes: 0,
+          })),
+        })) : []);
+        setCurrentVideoIndex(0);
+      } catch (e) {
+        if (!isMounted) return;
+        setError(e?.response?.data?.message || e.message);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchAll();
+    return () => { isMounted = false; };
+  }, [courseId]);
+
+  // Ensure currentVideoIndex stays within bounds when lessons change
+  useEffect(() => {
+    const len = Array.isArray(courseData.lessons) ? courseData.lessons.length : 0;
+    if (len === 0) {
+      if (currentVideoIndex !== 0) setCurrentVideoIndex(0);
+      return;
+    }
+    if (currentVideoIndex < 0 || currentVideoIndex >= len) {
+      setCurrentVideoIndex(0);
+    }
+  }, [courseData.lessons, currentVideoIndex]);
+
+  // Helper to safely derive a lesson id
+  const getLessonId = (lesson, fallbackIndex) =>
+    (lesson && (lesson.id || lesson._id)) ?? String(fallbackIndex);
+
+  const lessonsLength = Array.isArray(courseData.lessons)
+    ? courseData.lessons.length
+    : 0;
+  const currentLesson =
+    lessonsLength > 0 && currentVideoIndex >= 0 && currentVideoIndex < lessonsLength
+      ? courseData.lessons[currentVideoIndex]
+      : null;
+  const completedCount = (courseData.lessons || []).filter(
+    (lesson) => lesson && lesson.completed
+  ).length;
+  const progressPercentage = lessonsLength
+    ? (completedCount / lessonsLength) * 100
+    : 0;
+
+  const handleGenerateSummary = async () => {
+    try {
+      setSummaryLoading(true);
+      setSummaryText("");
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        setSummaryText("Gemini API key not configured. Set VITE_GEMINI_API_KEY.");
+        return;
+      }
+      const prompt = `Summarize this lesson clearly in bullet points. Title: ${currentLesson?.title || ""}. Description: ${currentLesson?.description || ""}.`;
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      });
+      const data = await resp.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No summary available.";
+      setSummaryText(text);
+    } catch (e) {
+      setSummaryText(e.message || "Failed to generate summary.");
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const completed = (courseData.lessons || [])
+      .filter((lesson) => lesson && lesson.completed)
+      .map((lesson, idx) => getLessonId(lesson, idx));
     setCompletedLessons(completed);
   }, []);
 
   const handleLessonSelect = (index) => {
-    setCurrentVideoIndex(index);
-    setActiveTab("video");
+    if (index >= 0 && index < lessonsLength) {
+      setCurrentVideoIndex(index);
+      setActiveTab("video");
+    }
   };
 
   const handleMarkComplete = () => {
-    if (!completedLessons.includes(currentLesson.id)) {
-      setCompletedLessons([...completedLessons, currentLesson.id]);
+    if (!currentLesson) return;
+    const lessonId = currentLesson.id ?? currentLesson._id ?? String(currentVideoIndex);
+    if (!completedLessons.includes(lessonId)) {
+      setCompletedLessons([...completedLessons, lessonId]);
     }
   };
 
@@ -287,6 +252,8 @@ const StudentCourseLearning = () => {
       icon: <FaClipboardList className="w-4 h-4" />,
     },
   ];
+
+  
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -364,17 +331,46 @@ const StudentCourseLearning = () => {
             {/* Video Tab */}
             {activeTab === "video" && (
               <div className="space-y-6">
-                {/* Video Player */}
-                <div className="bg-black rounded-lg overflow-hidden">
-                  <div className="relative aspect-video">
-                    <video
-                      className="w-full h-full"
-                      controls
-                      poster="https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=450&fit=crop"
+                {/* Video + Summarizer */}
+                <div className="flex flex-col lg:flex-row gap-4">
+                  {/* Video Player */}
+                <div className="flex-1 bg-black rounded-lg overflow-hidden">
+                    <div className="relative aspect-video">
+                      {/* TEMP YouTube embed. TODO: Replace with real videoUrl from backend once available */}
+                      {currentLesson ? (
+                        <iframe
+                          className="w-full h-full"
+                          src={
+                            currentLesson?.videoUrl && currentLesson.videoUrl.includes("youtube")
+                              ? currentLesson.videoUrl
+                              : "https://www.youtube.com/embed/dQw4w9WgXcQ"
+                          }
+                          title="Course video"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                        ></iframe>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white/80">
+                          No lecture available.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Summarizer Panel (Gemini) */}
+                  <div className="lg:w-80 bg-white rounded-lg shadow-sm border p-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">Video Summarizer</h3>
+                    <p className="text-xs text-gray-500 mb-3">Powered by Gemini. Summarizes the current lesson title/description in real-time.</p>
+                    <button
+                      onClick={handleGenerateSummary}
+                      disabled={summaryLoading}
+                      className="w-full mb-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                     >
-                      <source src={currentLesson.videoUrl} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
+                      {summaryLoading ? "Summarizing..." : "Summarize Lesson"}
+                    </button>
+                    <div className="h-64 overflow-auto border rounded-lg p-3 bg-gray-50 text-sm whitespace-pre-wrap">
+                      {summaryText || "Click Summarize to generate."}
+                    </div>
                   </div>
                 </div>
 
@@ -383,27 +379,38 @@ const StudentCourseLearning = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                        {currentLesson.title}
+                        {currentLesson?.title || ""}
                       </h2>
                       <p className="text-gray-600 mb-4">
-                        {currentLesson.description}
+                        {currentLesson?.description || ""}
                       </p>
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
                         <span className="flex items-center space-x-1">
                           <FaClock className="w-4 h-4" />
-                          <span>{currentLesson.duration}</span>
+                          <span>{currentLesson?.duration || ""}</span>
                         </span>
                         <span>
-                          Lesson {currentVideoIndex + 1} of{" "}
-                          {courseData.lessons.length}
+                          {lessonsLength > 0 && (
+                            <>
+                              Lesson {currentVideoIndex + 1} of {lessonsLength}
+                            </>
+                          )}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 ml-4">
                       <button
-                        onClick={() => toggleBookmark(currentLesson.id)}
+                        onClick={() => {
+                          if (!currentLesson) return;
+                          const lid = getLessonId(currentLesson, currentVideoIndex);
+                          toggleBookmark(lid);
+                        }}
                         className={`p-2 rounded-lg transition-colors ${
-                          bookmarkedLessons.includes(currentLesson.id)
+                          (() => {
+                            if (!currentLesson) return false;
+                            const lid = getLessonId(currentLesson, currentVideoIndex);
+                            return bookmarkedLessons.includes(lid);
+                          })()
                             ? "bg-yellow-100 text-yellow-600"
                             : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                         }`}
@@ -413,14 +420,22 @@ const StudentCourseLearning = () => {
                       <button
                         onClick={handleMarkComplete}
                         className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                          completedLessons.includes(currentLesson.id)
+                          (() => {
+                            if (!currentLesson) return false;
+                            const lid = getLessonId(currentLesson, currentVideoIndex);
+                            return completedLessons.includes(lid);
+                          })()
                             ? "bg-green-100 text-green-700"
                             : "bg-blue-600 text-white hover:bg-blue-700"
                         }`}
                       >
                         <FaCheck className="w-4 h-4" />
                         <span>
-                          {completedLessons.includes(currentLesson.id)
+                          {(() => {
+                            if (!currentLesson) return false;
+                            const lid = getLessonId(currentLesson, currentVideoIndex);
+                            return completedLessons.includes(lid);
+                          })()
                             ? "Completed"
                             : "Mark Complete"}
                         </span>
@@ -429,7 +444,7 @@ const StudentCourseLearning = () => {
                   </div>
 
                   {/* Resources */}
-                  {currentLesson.resources &&
+                  {currentLesson && currentLesson.resources &&
                     currentLesson.resources.length > 0 && (
                       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                         <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
@@ -477,7 +492,7 @@ const StudentCourseLearning = () => {
                     <button
                       onClick={handleNextLesson}
                       disabled={
-                        currentVideoIndex === courseData.lessons.length - 1
+                        lessonsLength === 0 || currentVideoIndex === lessonsLength - 1
                       }
                       className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -530,9 +545,9 @@ const StudentCourseLearning = () => {
 
                 {/* Discussion Messages */}
                 <div className="space-y-4">
-                  {discussionData.map((message) => (
+              {(discussionData || []).map((message, idx) => (
                     <div
-                      key={message.id}
+                  key={message.id || message._id || idx}
                       className="bg-white rounded-lg p-6 shadow-sm"
                     >
                       <div className="flex items-start space-x-4">
@@ -565,11 +580,11 @@ const StudentCourseLearning = () => {
                           </div>
 
                           {/* Replies */}
-                          {message.replies.length > 0 && (
+                          {(message.replies || []).length > 0 && (
                             <div className="mt-4 ml-4 space-y-3">
-                              {message.replies.map((reply) => (
+                              {message.replies.map((reply, ridx) => (
                                 <div
-                                  key={reply.id}
+                                  key={reply.id || reply._id || ridx}
                                   className="flex items-start space-x-3 bg-gray-50 p-4 rounded-lg"
                                 >
                                   <img
@@ -622,9 +637,9 @@ const StudentCourseLearning = () => {
 
                 {/* Assignments List */}
                 <div className="space-y-4">
-                  {assignmentsData.map((assignment) => (
+              {(assignmentsData || []).map((assignment, aidx) => (
                     <div
-                      key={assignment.id}
+                  key={assignment.id || assignment._id || aidx}
                       className="bg-white rounded-lg p-6 shadow-sm border"
                     >
                       <div className="flex items-start justify-between">
@@ -746,9 +761,9 @@ const StudentCourseLearning = () => {
 
               {/* Lessons List */}
               <div className="space-y-2">
-                {courseData.lessons.map((lesson, index) => (
+              {(courseData.lessons || []).map((lesson, index) => (
                   <div
-                    key={lesson.id}
+                  key={(lesson && (lesson.id || lesson._id)) || index}
                     onClick={() => handleLessonSelect(index)}
                     className={`p-3 rounded-lg cursor-pointer transition-all ${
                       index === currentVideoIndex
@@ -758,7 +773,7 @@ const StudentCourseLearning = () => {
                   >
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0 mt-1">
-                        {completedLessons.includes(lesson.id) ? (
+                      {completedLessons.includes(getLessonId(lesson, index)) ? (
                           <FaCheckCircle className="w-5 h-5 text-green-500" />
                         ) : (
                           <div
@@ -785,7 +800,7 @@ const StudentCourseLearning = () => {
                           >
                             {lesson.title}
                           </h4>
-                          {bookmarkedLessons.includes(lesson.id) && (
+                        {bookmarkedLessons.includes(getLessonId(lesson, index)) && (
                             <FaBookmark className="w-3 h-3 text-yellow-500 ml-2" />
                           )}
                         </div>

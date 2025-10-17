@@ -271,3 +271,24 @@ export const deleteLecture = async (req, res) => {
     });
   }
 };
+
+export const deleteCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const course = await courseModel.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: true, message: "Course not found" });
+    }
+    // Remove enrollments for this course
+    await enrollmentModel.deleteMany({ course: courseId });
+    // Remove course references from users
+    await userModel.updateMany({}, { $pull: { enrolledCourses: courseId } });
+    // Remove lectures linked to this course
+    await lectureModel.deleteMany({ course: courseId });
+    // Finally delete the course
+    await courseModel.findByIdAndDelete(courseId);
+    return res.json({ success: true, message: "Course deleted" });
+  } catch (error) {
+    return res.status(500).json({ error: true, message: error.message });
+  }
+};

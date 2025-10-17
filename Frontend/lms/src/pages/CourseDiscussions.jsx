@@ -9,6 +9,7 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
+import axiosInstance from "../../utils/axiosInstance";
 
 const CourseDiscussions = ({ courseId, course }) => {
   const navigate = useNavigate();
@@ -21,45 +22,7 @@ const CourseDiscussions = ({ courseId, course }) => {
     content: "",
   });
 
-  // Sample discussions data
-  const sampleDiscussions = [
-    {
-      id: 1,
-      title: "How to implement Binary Search Tree?",
-      content:
-        "I'm having trouble understanding how to implement a binary search tree in Python. Can someone explain the insertion and deletion operations?",
-      author: {
-        name: "John Smith",
-        role: "student",
-      },
-      createdAt: "2024-03-15T10:30:00Z",
-      replies: 8,
-    },
-    {
-      id: 2,
-      title: "Best practices for Python coding",
-      content:
-        "What are some best practices we should follow when writing Python code? I want to make sure I'm developing good habits early on.",
-      author: {
-        name: "Emma Davis",
-        role: "student",
-      },
-      createdAt: "2024-03-12T14:20:00Z",
-      replies: 12,
-    },
-    {
-      id: 3,
-      title: "Project collaboration guidelines",
-      content:
-        "For the upcoming group project, I think we should establish some guidelines for collaboration. What tools should we use?",
-      author: {
-        name: "Mike Chen",
-        role: "student",
-      },
-      createdAt: "2024-03-10T11:45:00Z",
-      replies: 6,
-    },
-  ];
+  // Removed sample data; using backend
 
   useEffect(() => {
     fetchDiscussions();
@@ -68,15 +31,22 @@ const CourseDiscussions = ({ courseId, course }) => {
   const fetchDiscussions = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/courses/${courseId}/discussions`);
-      // const data = await response.json();
-      // setDiscussions(data);
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setDiscussions(sampleDiscussions);
+      const { data } = await axiosInstance.get(`/course/${courseId}/discussions`);
+      // Normalize shape
+      const list = Array.isArray(data?.discussions)
+        ? data.discussions.map((d) => ({
+            id: d._id,
+            title: d.title || (d.content || "").slice(0, 60),
+            content: d.content,
+            author: { name: d.author?.userName || "", role: "student" },
+            createdAt: d.createdAt,
+            replies: (d.replies || []).length,
+          }))
+        : [];
+      setDiscussions(list);
     } catch (error) {
       toast.error("Failed to fetch discussions");
+      setDiscussions([]);
     } finally {
       setLoading(false);
     }
@@ -85,27 +55,12 @@ const CourseDiscussions = ({ courseId, course }) => {
   const handleCreateDiscussion = async (e) => {
     e.preventDefault();
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/courses/${courseId}/discussions`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
-      // const newDiscussion = await response.json();
-
-      const newDiscussion = {
-        id: Date.now(),
+      await axiosInstance.post(`/course/${courseId}/discussions`, {
         title: formData.title,
         content: formData.content,
-        author: {
-          name: "Dr. Sarah Johnson",
-          role: "teacher",
-        },
-        createdAt: new Date().toISOString(),
-        replies: 0,
-      };
-
-      setDiscussions([newDiscussion, ...discussions]);
+        // authorId could be taken from auth context if needed
+      });
+      await fetchDiscussions();
       setShowModal(false);
       setFormData({ title: "", content: "" });
       toast.success("Discussion created successfully");

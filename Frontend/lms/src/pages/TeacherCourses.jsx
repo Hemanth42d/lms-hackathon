@@ -72,16 +72,15 @@ const TeacherCourses = () => {
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (window.confirm("Are you sure you want to delete this course?")) {
-      try {
-        await axiosInstance.delete(`/teacher/courses/${courseId}`);
-        toast.success("Course deleted successfully");
-        // Refresh courses data
-        fetchCourses();
-      } catch (error) {
-        toast.error("Failed to delete course");
-        console.error("Delete course error:", error);
-      }
+    if (!courseId) return;
+    if (!window.confirm("Are you sure you want to delete this course? This cannot be undone.")) return;
+    try {
+      await axiosInstance.delete(`/teacher/courses/${courseId}`);
+      toast.success("Course deleted successfully");
+      await fetchCourses();
+    } catch (error) {
+      console.error("Delete course error:", error);
+      toast.error(error?.response?.data?.message || "Failed to delete course");
     }
   };
 

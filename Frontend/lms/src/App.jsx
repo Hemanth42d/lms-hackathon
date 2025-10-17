@@ -7,7 +7,6 @@ import StudentDashboardLayout from "./pages/StudentDashboardLayout";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentCourses from "./pages/StudentCourses";
 import StudentCalendar from "./pages/StudentCalendar";
-import StudentMessages from "./pages/StudentMessages";
 import StudentSettings from "./pages/StudentSettings";
 import StudentMyCourses from "./components/StudentDashboard/StudentMyCourses";
 import StudentNotifications from "./pages/StudentNotifications";
@@ -18,7 +17,6 @@ import TeacherCourses from "./pages/TeacherCourses";
 import CourseLectures from "./pages/CourseLectures";
 import CourseAssignments from "./pages/CourseAssignments";
 import CourseDiscussions from "./pages/CourseDiscussions";
-import TeacherMessages from "./pages/TeacherMessages";
 import TeacherProfile from "./pages/TeacherProfile";
 import TeacherSettings from "./pages/TeacherSettings";
 import CourseDetail from "./pages/CourseDetail";
@@ -54,7 +52,7 @@ function App() {
                 element={<StudentCourseLearning />}
               />
               <Route path="calendar" element={<StudentCalendar />} />
-              <Route path="messages" element={<StudentMessages />} />
+              
               <Route path="settings" element={<StudentSettings />} />
               <Route path="notifications" element={<StudentNotifications />} />
             </Route>
@@ -66,7 +64,7 @@ function App() {
               />
               <Route path="dashboard" element={<TeacherDashboard />} />
               <Route path="courses" element={<TeacherCourses />} />
-              <Route path="messages" element={<TeacherMessages />} />
+              
               <Route path="profile" element={<TeacherProfile />} />
               <Route path="settings" element={<TeacherSettings />} />
 

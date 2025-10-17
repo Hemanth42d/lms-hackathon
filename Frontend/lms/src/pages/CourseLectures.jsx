@@ -27,42 +27,7 @@ const CourseLectures = ({ courseId, course }) => {
     pptUrl: "",
   });
 
-  // Sample lectures data
-  const sampleLectures = [
-    {
-      id: 1,
-      title: "Introduction to Python Basics",
-      description:
-        "Learn the fundamentals of Python programming including variables, data types, and basic syntax.",
-      duration: "45 minutes",
-      videoUrl: "https://example.com/video1.mp4",
-      pdfUrl: "https://example.com/notes1.pdf",
-      pptUrl: "https://example.com/slides1.pptx",
-      createdAt: "2024-03-15T10:00:00Z",
-    },
-    {
-      id: 2,
-      title: "Control Structures and Loops",
-      description:
-        "Understanding if-else statements, for loops, and while loops in Python.",
-      duration: "60 minutes",
-      videoUrl: "https://example.com/video2.mp4",
-      pdfUrl: "https://example.com/notes2.pdf",
-      pptUrl: "",
-      createdAt: "2024-03-16T10:00:00Z",
-    },
-    {
-      id: 3,
-      title: "Functions and Modules",
-      description:
-        "Learn how to create and use functions, and work with Python modules.",
-      duration: "50 minutes",
-      videoUrl: "https://example.com/video3.mp4",
-      pdfUrl: "",
-      pptUrl: "https://example.com/slides3.pptx",
-      createdAt: "2024-03-17T10:00:00Z",
-    },
-  ];
+  // Removed sample lectures; fetch from backend instead
 
   useEffect(() => {
     fetchLectures();
@@ -71,13 +36,8 @@ const CourseLectures = ({ courseId, course }) => {
   const fetchLectures = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/courses/${courseId}/lectures`);
-      // const data = await response.json();
-      // setLectures(data.lectures);
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setLectures(sampleLectures);
+      const { data } = await axiosInstance.get(`/course/${courseId}/lectures`);
+      setLectures(Array.isArray(data?.lectures) ? data.lectures : []);
     } catch (error) {
       toast.error("Failed to fetch lectures");
     } finally {
@@ -112,13 +72,7 @@ const CourseLectures = ({ courseId, course }) => {
       });
 
     try {
-      const newLecture = {
-        id: Date.now(),
-        ...formData,
-        createdAt: new Date().toISOString(),
-      };
-
-      setLectures([...lectures, newLecture]);
+      await fetchLectures();
       setShowModal(false);
       setFormData({
         title: "",
@@ -144,13 +98,7 @@ const CourseLectures = ({ courseId, course }) => {
       //   body: JSON.stringify(formData)
       // });
 
-      setLectures(
-        lectures.map((lecture) =>
-          lecture.id === selectedLecture.id
-            ? { ...lecture, ...formData }
-            : lecture
-        )
-      );
+      await fetchLectures();
 
       setShowModal(false);
       setSelectedLecture(null);
@@ -166,7 +114,7 @@ const CourseLectures = ({ courseId, course }) => {
         // TODO: Replace with actual API call
         // await fetch(`/api/lectures/${lectureId}`, { method: 'DELETE' });
 
-        setLectures(lectures.filter((lecture) => lecture.id !== lectureId));
+        await fetchLectures();
         toast.success("Lecture deleted successfully");
       } catch (error) {
         toast.error("Failed to delete lecture");
