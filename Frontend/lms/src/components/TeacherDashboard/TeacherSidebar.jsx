@@ -8,11 +8,6 @@ import {
   FaSignOutAlt,
   FaTimes,
   FaGraduationCap,
-<<<<<<< HEAD
-=======
-  FaCalendarAlt,
-  FaComments,
->>>>>>> 6f79129 (updated password change and profile integration with the frontend)
 } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext";
 
