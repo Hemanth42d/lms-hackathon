@@ -20,6 +20,7 @@ const StudentCourses = () => {
     loading: contextLoading,
     error,
     fetchCourses,
+    getUser,
   } = useCourses();
   const { user } = useAuth();
 
@@ -73,13 +74,14 @@ const StudentCourses = () => {
 
   const handleEnroll = async (course) => {
     try {
-      const userId = user?._id || JSON.parse(localStorage.getItem("user") || "null")?._id;
+      const userId =
+        user?._id || JSON.parse(localStorage.getItem("user") || "null")?._id;
       await axiosInstance.post("/enroll", { userId, courseId: course.id });
-      window.dispatchEvent(new CustomEvent("enrollment-updated"));
-      if (course.openMessages && course.instructorId) {
-        // Navigate to messages page and optionally preselect instructor conversation in future
-        window.location.href = "/student/messages";
+      // Refresh enrolled courses in context
+      if (typeof getUser === "function") {
+        await getUser();
       }
+      window.dispatchEvent(new CustomEvent("enrollment-updated"));
     } catch (e) {
       console.error("Enroll failed", e);
       alert(e?.response?.data?.message || e.message);
@@ -309,11 +311,15 @@ const StudentCourses = () => {
                   title: course.title,
                   duration: course.duration,
                   instructor:
-                    (typeof course.instructor === "object" ? course.instructor?.userName : course.instructor) ||
+                    (typeof course.instructor === "object"
+                      ? course.instructor?.userName
+                      : course.instructor) ||
                     course.createdBy?.name ||
                     "Unknown Instructor",
                   instructorId:
-                    (typeof course.instructor === "object" ? course.instructor?._id : null),
+                    typeof course.instructor === "object"
+                      ? course.instructor?._id
+                      : null,
                   category: course.category,
                   image:
                     course.thumbnailUrl ||

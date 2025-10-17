@@ -44,11 +44,21 @@ export const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(saltRounds);
     const hash = await bcrypt.hash(password, salt);
 
+    // Split userName into firstName and lastName if possible
+    const nameParts = userName.trim().split(" ");
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
     let newUser = await userModel.create({
       userName,
       email,
       password: hash,
       role,
+      firstName,
+      lastName,
+      profileImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        userName
+      )}&size=200&background=3b82f6&color=fff`,
       createdAt: currTime,
       updatedAt: currTime,
     });
@@ -70,6 +80,9 @@ export const registerUser = async (req, res) => {
         userName: newUser.userName,
         email: newUser.email,
         role: newUser.role,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        profileImage: newUser.profileImage,
       },
     });
   } catch (error) {
@@ -134,6 +147,9 @@ export const loginUser = async (req, res) => {
         userName: user.userName,
         email: user.email,
         role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImage: user.profileImage,
       },
     });
   } catch (error) {

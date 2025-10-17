@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { FaEye, FaEyeSlash, FaUser, FaChalkboardTeacher } from "react-icons/fa";
 import axiosInstance from "../../utils/axiosInstance";
+import { useAuth } from "../../context/AuthContext";
 
 const Register = () => {
+  const { setUser, setToken } = useAuth();
   const [formData, setFormData] = useState({
     userName: "",
     email: "",
@@ -13,6 +15,8 @@ const Register = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -22,37 +26,57 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
-    console.log("Register form submitted:", formData);
-    registerUser();
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long!");
+      return;
+    }
+
+    await registerUser();
   };
 
-  const registerUser = () => {
-    const userData = axiosInstance
-      .post("/register", {
+  const registerUser = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.post("/register", {
         userName: formData.userName,
         email: formData.email,
         password: formData.password,
         role: formData.role,
-      })
-      .then((res) => {
+      });
+
+      if (response.data.success) {
+        // Store user data and token in context
+        setUser(response.data.user);
+        setToken(response.data.token);
+
         console.log("User registered successfully");
+
+        // Navigate based on role
         if (formData.role === "Student") {
           navigate("/student");
         } else if (formData.role === "Teacher") {
           navigate("/teacher");
-        } else if (formData.role === "Admin") {
+        } else if (formData.role === "admin") {
           navigate("/admin");
         }
-      })
-      .catch((err) => {
-        console.log(err.message);
-      });
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      setError(
+        err.response?.data?.message || "Registration failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,6 +122,13 @@ const Register = () => {
               Experience innovative learning journeys
             </p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
 
           {/* Register Form */}
           <div className="space-y-5">
@@ -273,9 +304,10 @@ const Register = () => {
 
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg"
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Account
+                {loading ? "Creating Account..." : "Create Account"}
               </button>
             </form>
 

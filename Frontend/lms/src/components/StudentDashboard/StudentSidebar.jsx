@@ -35,11 +35,6 @@ const StudentSidebar = ({ sidebarOpen, toggleSidebar }) => {
       icon: <FaCalendarAlt className="w-5 h-5" />,
     },
     {
-      name: "Messages",
-      path: "/student/messages",
-      icon: <FaEnvelope className="w-5 h-5" />,
-    },
-    {
       name: "Settings",
       path: "/student/settings",
       icon: <FaCog className="w-5 h-5" />,

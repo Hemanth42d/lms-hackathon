@@ -20,6 +20,50 @@ const userSchema = mongoose.Schema({
     enum: ["Student", "Teacher", "admin"],
     default: "Student",
   },
+  // Profile fields
+  firstName: {
+    type: String,
+    default: "",
+  },
+  lastName: {
+    type: String,
+    default: "",
+  },
+  phone: {
+    type: String,
+    default: "",
+  },
+  dateOfBirth: {
+    type: Date,
+  },
+  address: {
+    type: String,
+    default: "",
+  },
+  city: {
+    type: String,
+    default: "",
+  },
+  state: {
+    type: String,
+    default: "",
+  },
+  zipCode: {
+    type: String,
+    default: "",
+  },
+  country: {
+    type: String,
+    default: "",
+  },
+  bio: {
+    type: String,
+    default: "",
+  },
+  profileImage: {
+    type: String,
+    default: "",
+  },
   enrolledCourses: [
     {
       type: mongoose.Schema.Types.ObjectId,
