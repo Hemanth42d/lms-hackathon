@@ -200,7 +200,7 @@ export const enrollInCourse = async (req, res) => {
 export const addLectures = async (req, res) => {
   try {
     const { courseId } = req.params;
-    const { title, description, duration, videoUrl, pdfUrl, pptUrl } = req.body;
+    const { title, description, duration, videoUrl, pdfUrl, pptUrl, transcriptUrl } = req.body;
 
     if (!title || !description || !videoUrl) {
       return res.json({
@@ -224,6 +224,7 @@ export const addLectures = async (req, res) => {
       videoUrl,
       pdfUrl: pdfUrl || "",
       pptUrl: pptUrl || "",
+      transcriptUrl: transcriptUrl || "",
       courseId: courseId,
     });
 
@@ -275,7 +276,7 @@ export const getLectures = async (req, res) => {
 export const updateLecture = async (req, res) => {
   try {
     const { lectureId } = req.params;
-    const { title, description, duration, videoUrl, pdfUrl, pptUrl } = req.body;
+    const { title, description, duration, videoUrl, pdfUrl, pptUrl, transcriptUrl } = req.body;
 
     const lecture = await lectureModel.findById(lectureId);
     if (!lecture) {
@@ -295,6 +296,7 @@ export const updateLecture = async (req, res) => {
         videoUrl: videoUrl || lecture.videoUrl,
         pdfUrl: pdfUrl !== undefined ? pdfUrl : lecture.pdfUrl,
         pptUrl: pptUrl !== undefined ? pptUrl : lecture.pptUrl,
+        transcriptUrl: transcriptUrl !== undefined ? transcriptUrl : lecture.transcriptUrl,
       },
       { new: true }
     );

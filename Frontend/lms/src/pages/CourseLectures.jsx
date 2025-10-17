@@ -25,6 +25,7 @@ const CourseLectures = ({ courseId, course }) => {
     videoUrl: "",
     pdfUrl: "",
     pptUrl: "",
+    transcriptUrl: "",
   });
 
   // Removed sample lectures; fetch from backend instead
@@ -63,6 +64,7 @@ const CourseLectures = ({ courseId, course }) => {
         videoUrl: formData.videoUrl || "",
         pdfUrl: formData.pdfUrl || "",
         pptUrl: formData.pptUrl || "",
+        transcriptUrl: formData.transcriptUrl || "",
       })
       .then((res) => {
         console.log(res);
@@ -81,6 +83,7 @@ const CourseLectures = ({ courseId, course }) => {
         videoUrl: "",
         pdfUrl: "",
         pptUrl: "",
+        transcriptUrl: "",
       });
       toast.success("Lecture created successfully");
     } catch (error) {
@@ -145,6 +148,7 @@ const CourseLectures = ({ courseId, course }) => {
       videoUrl: lecture.videoUrl,
       pdfUrl: lecture.pdfUrl || "",
       pptUrl: lecture.pptUrl || "",
+      transcriptUrl: lecture.transcriptUrl || "",
     });
     setShowModal(true);
   };
@@ -397,6 +401,22 @@ const CourseLectures = ({ courseId, course }) => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="https://example.com/slides.pptx (optional)"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Transcript URL (public text link)
+                </label>
+                <input
+                  type="url"
+                  value={formData.transcriptUrl}
+                  onChange={(e) => handleInputChange("transcriptUrl", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://drive.google.com/uc?export=download&id=FILE_ID or public .txt"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Provide a public text link; it will be used for summaries.
+                </p>
               </div>
 
               <div className="flex space-x-3 pt-4">

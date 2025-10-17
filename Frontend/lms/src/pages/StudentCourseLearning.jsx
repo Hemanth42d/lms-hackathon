@@ -60,6 +60,7 @@ const StudentCourseLearning = () => {
           title: l.title,
           duration: l.duration || "",
           videoUrl: l.videoUrl,
+          transcriptUrl: l.transcriptUrl || "",
           completed: false,
           description: l.description || "",
           resources: [
@@ -140,22 +141,15 @@ const StudentCourseLearning = () => {
     try {
       setSummaryLoading(true);
       setSummaryText("");
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        setSummaryText("Gemini API key not configured. Set VITE_GEMINI_API_KEY.");
-        return;
-      }
-      const prompt = `Summarize this lesson clearly in bullet points. Title: ${currentLesson?.title || ""}. Description: ${currentLesson?.description || ""}.`;
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      const resp = await axiosInstance.post(`/ai/summarize-from-url`, {
+        videoUrl: currentLesson?.videoUrl || "",
+        transcriptUrl: currentLesson?.transcriptUrl || "",
       });
-      const data = await resp.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No summary available.";
+      const text = resp?.data?.summary || "No summary available.";
       setSummaryText(text);
     } catch (e) {
-      setSummaryText(e.message || "Failed to generate summary.");
+      const serverMsg = e?.response?.data?.message;
+      setSummaryText(serverMsg || e.message || "Failed to generate summary.");
     } finally {
       setSummaryLoading(false);
     }
@@ -336,20 +330,57 @@ const StudentCourseLearning = () => {
                   {/* Video Player */}
                 <div className="flex-1 bg-black rounded-lg overflow-hidden">
                     <div className="relative aspect-video">
-                      {/* TEMP YouTube embed. TODO: Replace with real videoUrl from backend once available */}
                       {currentLesson ? (
-                        <iframe
-                          className="w-full h-full"
-                          src={
-                            currentLesson?.videoUrl && currentLesson.videoUrl.includes("youtube")
-                              ? currentLesson.videoUrl
-                              : "https://www.youtube.com/embed/dQw4w9WgXcQ"
+                        (() => {
+                          const url = currentLesson?.videoUrl || "";
+                          const isYouTube = /youtube\.com|youtu\.be/.test(url);
+                          const isGoogleDrive = /drive\.google\.com/.test(url);
+                          const getYouTubeEmbed = (rawUrl) => {
+                            try {
+                              const u = new URL(rawUrl);
+                              if (u.hostname.includes("youtu.be")) {
+                                const id = u.pathname.replace("/", "");
+                                return id ? `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1` : "";
+                              }
+                              const vid = u.searchParams.get("v");
+                              if (vid) return `https://www.youtube.com/embed/${vid}?rel=0&modestbranding=1`;
+                              if (u.pathname.startsWith("/embed/")) return u.toString();
+                            } catch (_) {}
+                            return "";
+                          };
+                          const getDriveEmbed = (rawUrl) => {
+                            try {
+                              const u = new URL(rawUrl);
+                              let id = u.searchParams.get("id") || "";
+                              const m = u.pathname.match(/\/file\/d\/([^/]+)/);
+                              if (!id && m && m[1]) id = m[1];
+                              if (id) return `https://drive.google.com/file/d/${id}/preview`;
+                            } catch (_) {}
+                            return "";
+                          };
+                          const embedSrc = isYouTube
+                            ? getYouTubeEmbed(url)
+                            : isGoogleDrive
+                            ? getDriveEmbed(url)
+                            : "";
+                          if (embedSrc) {
+                            return (
+                              <iframe
+                                className="w-full h-full"
+                                src={embedSrc}
+                                title="Course video"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                              ></iframe>
+                            );
                           }
-                          title="Course video"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                        ></iframe>
+                          return (
+                            <div className="w-full h-full flex items-center justify-center text-white/80">
+                              Unsupported video link.
+                            </div>
+                          );
+                        })()
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-white/80">
                           No lecture available.

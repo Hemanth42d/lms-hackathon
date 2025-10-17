@@ -19,6 +19,9 @@ const lectureSchema = new mongoose.Schema({
   pptUrl: {
     type: String,
   },
+  transcriptUrl: {
+    type: String,
+  },
   duration: Number,
   order: Number,
   description: String,

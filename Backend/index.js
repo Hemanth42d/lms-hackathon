@@ -8,6 +8,7 @@ import "./config/db-connection.js";
 import userRoutes from "./routes/userRoutes.js";
 import teacherRoutes from "./routes/teacherRoutes.js";
 import courseRoute from "./routes/courseRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use(cookieParser());
 app.use("/api", userRoutes);
 app.use("/api", courseRoute);
 app.use("/api/teacher", teacherRoutes);
+app.use("/api", aiRoutes);
 
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
