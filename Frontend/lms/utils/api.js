@@ -68,6 +68,13 @@ export const teacherAPI = {
       method: "GET",
       token,
     }),
+
+  // Update courses instructor
+  updateCoursesInstructor: (token) =>
+    apiCall("/teacher/update-courses-instructor", {
+      method: "POST",
+      token,
+    }),
 };
 
 export default apiCall;

@@ -8,6 +8,11 @@ import {
   FaSignOutAlt,
   FaTimes,
   FaGraduationCap,
+<<<<<<< HEAD
+=======
+  FaCalendarAlt,
+  FaComments,
+>>>>>>> 6f79129 (updated password change and profile integration with the frontend)
 } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -19,7 +24,7 @@ const TeacherSidebar = ({ isOpen, onClose }) => {
   // Get teacher data from auth context
   const teacherData = {
     name: user?.userName || "Teacher",
-    title: user?.department ? `${user.department} Department` : "Teacher",
+    title: "Teacher",
     avatar:
       user?.profileImage ||
       `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -37,6 +42,11 @@ const TeacherSidebar = ({ isOpen, onClose }) => {
       name: "My Courses",
       path: "/teacher/courses",
       icon: <FaBookOpen className="w-5 h-5" />,
+    },
+    {
+      name: "Messages",
+      path: "/teacher/messages",
+      icon: <FaComments className="w-5 h-5" />,
     },
     {
       name: "Profile",

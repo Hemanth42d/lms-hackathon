@@ -82,6 +82,44 @@ export const getTeacherStats = async (req, res) => {
   }
 };
 
+// Update courses without instructor to assign them to the requesting teacher
+export const updateCoursesInstructor = async (req, res) => {
+  try {
+    const teacherId = req.user._id;
+
+    // Find courses without instructor
+    const coursesWithoutInstructor = await courseModel.find({
+      $or: [{ instructor: null }, { instructor: { $exists: false } }],
+    });
+
+    if (coursesWithoutInstructor.length === 0) {
+      return res.json({
+        success: true,
+        message: "All courses already have instructors assigned",
+        updated: 0,
+      });
+    }
+
+    // Update courses to assign the current teacher as instructor
+    const updateResult = await courseModel.updateMany(
+      { $or: [{ instructor: null }, { instructor: { $exists: false } }] },
+      { instructor: teacherId }
+    );
+
+    return res.json({
+      success: true,
+      message: `Updated ${updateResult.modifiedCount} courses with instructor information`,
+      updated: updateResult.modifiedCount,
+    });
+  } catch (error) {
+    console.error("Error updating courses instructor:", error);
+    return res.status(500).json({
+      error: true,
+      message: error.message,
+    });
+  }
+};
+
 // Helper function to get time ago
 const getTimeAgo = (date) => {
   const now = new Date();

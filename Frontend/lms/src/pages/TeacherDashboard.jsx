@@ -30,6 +30,17 @@ const TeacherDashboard = () => {
       setError("");
 
       try {
+        // First, update courses instructor information for existing courses
+        try {
+          await teacherAPI.updateCoursesInstructor(token);
+        } catch (updateError) {
+          console.log(
+            "Note: Could not update courses instructor:",
+            updateError.message
+          );
+        }
+
+        // Then fetch dashboard stats
         const response = await teacherAPI.getDashboardStats(token);
 
         if (response.success) {

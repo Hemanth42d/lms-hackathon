@@ -11,7 +11,7 @@ const TeacherDashboardLayout = () => {
   // Get teacher data from auth context
   const teacherData = {
     name: user?.userName || "Teacher",
-    title: user?.department ? `${user.department} Department` : "Teacher",
+    title: "Teacher",
     avatar:
       user?.profileImage ||
       `https://ui-avatars.com/api/?name=${encodeURIComponent(

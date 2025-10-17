@@ -41,7 +41,6 @@ const TeacherSettings = () => {
     country: "",
     bio: "",
     profileImage: "",
-    department: "",
   });
 
   // Password Settings State
@@ -77,7 +76,7 @@ const TeacherSettings = () => {
             zipCode: userData.zipCode || "",
             country: userData.country || "",
             bio: userData.bio || "",
-            department: userData.department || "",
+
             profileImage:
               userData.profileImage ||
               `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -357,20 +356,6 @@ const TeacherSettings = () => {
                       value={profileData.phone}
                       onChange={handleProfileChange}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Department
-                    </label>
-                    <input
-                      type="text"
-                      name="department"
-                      value={profileData.department}
-                      onChange={handleProfileChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Computer Science"
                     />
                   </div>
 

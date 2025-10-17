@@ -14,18 +14,27 @@ export const createcourse = async (req, res) => {
       });
     }
 
+    // Use authenticated user as instructor
+    const instructorId = req.user ? req.user._id : null;
+
     const newCourse = await courseModel.create({
       title,
       description,
       category,
-      thumbnail: thumbnailUrl || "",
+      thumbnailUrl: thumbnailUrl || "",
       duration,
+      instructor: instructorId, // Set authenticated user as instructor
     });
+
+    // Populate instructor information in the response
+    const populatedCourse = await courseModel
+      .findById(newCourse._id)
+      .populate({ path: "instructor", select: "userName email" });
 
     return res.json({
       success: true,
       message: "Successfully created course",
-      course: newCourse,
+      course: populatedCourse,
     });
   } catch (error) {
     res.json({
@@ -71,10 +80,20 @@ export const getMyCourses = async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) {
-      return res.status(400).json({ error: true, message: "userId is required" });
+      return res
+        .status(400)
+        .json({ error: true, message: "userId is required" });
     }
 
-    const user = await userModel.findById(userId).populate({ path: "enrolledCourses", select: "title description category thumbnailUrl duration lectures assignments discussions instructor" });
+    const user = await userModel.findById(userId).populate({
+      path: "enrolledCourses",
+      select:
+        "title description category thumbnailUrl duration lectures assignments discussions instructor",
+      populate: {
+        path: "instructor",
+        select: "userName email",
+      },
+    });
     if (!user) {
       return res.status(404).json({ error: true, message: "User not found" });
     }
@@ -84,15 +103,24 @@ export const getMyCourses = async (req, res) => {
     const results = (user.enrolledCourses || []).map((c) => {
       const e = enrollments.find((en) => String(en.course) === String(c._id));
       const totalLessons = Array.isArray(c.lectures) ? c.lectures.length : 0;
-      const lessonsCompleted = Array.isArray(e?.completedLectures) ? e.completedLectures.length : 0;
+      const lessonsCompleted = Array.isArray(e?.completedLectures)
+        ? e.completedLectures.length
+        : 0;
       const lastAccessed = e?.lastAccessed || e?.enrolledAt;
-      const progress = e?.progress ?? (totalLessons ? Math.round((lessonsCompleted / totalLessons) * 100) : 0);
+      const progress =
+        e?.progress ??
+        (totalLessons
+          ? Math.round((lessonsCompleted / totalLessons) * 100)
+          : 0);
       return {
         id: c._id,
         courseId: c._id,
         title: c.title,
         duration: c.duration || "0 hours",
-        instructor: c.instructor,
+        instructor:
+          typeof c.instructor === "object" && c.instructor
+            ? c.instructor.userName
+            : c.instructor || "Unknown Instructor",
         category: c.category,
         image: c.thumbnailUrl || "",
         progress,
@@ -103,7 +131,11 @@ export const getMyCourses = async (req, res) => {
       };
     });
 
-    return res.json({ success: true, message: "My courses fetched", courses: results });
+    return res.json({
+      success: true,
+      message: "My courses fetched",
+      courses: results,
+    });
   } catch (error) {
     return res.status(500).json({ error: true, message: error.message });
   }
@@ -113,7 +145,9 @@ export const enrollInCourse = async (req, res) => {
   try {
     const { userId, courseId } = req.body;
     if (!userId || !courseId) {
-      return res.status(400).json({ error: true, message: "userId and courseId are required" });
+      return res
+        .status(400)
+        .json({ error: true, message: "userId and courseId are required" });
     }
 
     const user = await userModel.findById(userId);
@@ -126,6 +160,7 @@ export const enrollInCourse = async (req, res) => {
       return res.status(404).json({ error: true, message: "Course not found" });
     }
 
+<<<<<<< HEAD
     const existing = await enrollmentModel.findOne({ user: userId, course: courseId });
     if (existing) {
       // Ensure user doc is in sync but do not create duplicate enrollment
@@ -135,6 +170,18 @@ export const enrollInCourse = async (req, res) => {
         { new: true }
       );
       return res.status(200).json({ success: true, alreadyEnrolled: true, message: "User already enrolled" });
+=======
+    const existing = await enrollmentModel.findOne({
+      user: userId,
+      course: courseId,
+    });
+    if (!existing) {
+      await enrollmentModel.create({
+        user: userId,
+        course: courseId,
+        progress: 0,
+      });
+>>>>>>> 6f79129 (updated password change and profile integration with the frontend)
     }
     await enrollmentModel.create({ user: userId, course: courseId, progress: 0 });
     await userModel.findByIdAndUpdate(
@@ -142,7 +189,9 @@ export const enrollInCourse = async (req, res) => {
       { $addToSet: { enrolledCourses: courseId } },
       { new: true }
     );
-    return res.status(201).json({ success: true, message: "Enrolled successfully" });
+    return res
+      .status(201)
+      .json({ success: true, message: "Enrolled successfully" });
   } catch (error) {
     return res.status(500).json({ error: true, message: error.message });
   }

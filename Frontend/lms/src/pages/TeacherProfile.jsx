@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  FaUser,
   FaEnvelope,
   FaPhone,
   FaMapMarkerAlt,
@@ -9,45 +8,118 @@ import {
   FaSave,
   FaTimes,
   FaCamera,
+  FaSpinner,
 } from "react-icons/fa";
-import toast from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
+import { userAPI } from "../../utils/api";
 
 const TeacherProfile = () => {
+  const { user, token, setUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
-    name: "Dr. Sarah Johnson",
-    email: "sarah.johnson@university.edu",
-    phone: "+1 (555) 123-4567",
-    location: "New York, NY",
-    department: "Computer Science",
-    title: "Associate Professor",
-    bio: "Dr. Sarah Johnson is an Associate Professor in the Computer Science Department with over 10 years of experience in teaching and research. She specializes in data structures, algorithms, and machine learning.",
-    education: [
-      "Ph.D. in Computer Science - MIT (2010)",
-      "M.S. in Computer Science - Stanford University (2006)",
-      "B.S. in Computer Science - UC Berkeley (2004)",
-    ],
-    experience: [
-      "Associate Professor - Current University (2015-Present)",
-      "Assistant Professor - Tech Institute (2010-2015)",
-      "Research Scientist - Google (2008-2010)",
-    ],
-    expertise: [
-      "Data Structures",
-      "Algorithms",
-      "Machine Learning",
-      "Python",
-      "JavaScript",
-      "React",
-    ],
-    socialLinks: {
-      linkedin: "https://linkedin.com/in/sarahjohnson",
-      twitter: "https://twitter.com/drsarahjohnson",
-      github: "https://github.com/sarahjohnson",
-    },
+    name: "",
+    email: "",
+    phone: "",
+    location: "",
+    title: "",
+    bio: "",
+    education: [],
+    experience: [],
+    expertise: [],
+    profileImage: "",
   });
 
   const [originalData, setOriginalData] = useState({ ...formData });
+
+  // Generate random education, experience, and expertise
+  const generateRandomData = () => {
+    const educationOptions = [
+      "Ph.D. in Computer Science - MIT",
+      "Ph.D. in Engineering - Stanford University",
+      "Ph.D. in Mathematics - Harvard University",
+      "M.S. in Computer Science - UC Berkeley",
+      "M.S. in Data Science - Carnegie Mellon",
+      "B.S. in Computer Engineering - Caltech",
+      "B.S. in Mathematics - Princeton University",
+    ];
+
+    const experienceOptions = [
+      "Professor - Current University (2018-Present)",
+      "Associate Professor - Tech Institute (2015-2018)",
+      "Assistant Professor - Research University (2012-2015)",
+      "Senior Research Scientist - Google (2010-2012)",
+      "Software Engineer - Microsoft (2008-2010)",
+      "Research Intern - IBM Research (2007-2008)",
+    ];
+
+    const defaultExpertise = [
+      "Research",
+      "Teaching",
+      "Academic Writing",
+      "Curriculum Development",
+      "Student Mentoring",
+      "Grant Writing",
+    ];
+
+    return {
+      education: educationOptions.slice(0, 3),
+      experience: experienceOptions.slice(0, 3),
+      expertise: defaultExpertise,
+    };
+  };
+
+  // Load user profile data
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!token) return;
+
+      try {
+        setLoading(true);
+        const response = await userAPI.getProfile(token);
+
+        if (response.success) {
+          const userData = response.user;
+          const randomData = generateRandomData();
+
+          const location =
+            [userData.city, userData.state, userData.country]
+              .filter(Boolean)
+              .join(", ") || "Not specified";
+
+          setFormData({
+            name: userData.userName || "",
+            email: userData.email || "",
+            phone: userData.phone || "",
+            location: location,
+            title: "Professor",
+            bio:
+              userData.bio ||
+              `${userData.userName} is a dedicated educator with expertise in various fields. Passionate about teaching and research, committed to student success and academic excellence.`,
+            education: randomData.education,
+            experience: randomData.experience,
+            expertise: randomData.expertise,
+            profileImage:
+              userData.profileImage ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                userData.userName || "Teacher"
+              )}&size=200&background=3b82f6&color=fff`,
+          });
+          setOriginalData(formData);
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+        setError("Failed to load profile data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, [token, user]); // Added user dependency to refresh when user data changes
 
   const handleEdit = () => {
     setOriginalData({ ...formData });
@@ -55,13 +127,49 @@ const TeacherProfile = () => {
   };
 
   const handleSave = async () => {
+    if (!token) return;
+
     try {
-      // Here you would typically send the data to your API
-      // await updateProfile(formData);
-      setIsEditing(false);
-      toast.success("Profile updated successfully");
+      setSaving(true);
+
+      // Update the profile data that can be changed
+      const updateData = {
+        userName: formData.name,
+        phone: formData.phone,
+        bio: formData.bio,
+        // Parse location back to city, state, country if needed
+        city: formData.location.split(",")[0]?.trim() || "",
+        state: formData.location.split(",")[1]?.trim() || "",
+        country: formData.location.split(",")[2]?.trim() || "",
+      };
+
+      const response = await userAPI.updateProfile(updateData, token);
+
+      if (response.success) {
+        setUser(response.user);
+        setIsEditing(false);
+        setError("");
+
+        // Update the form data with the response
+        const userData = response.user;
+        const location =
+          [userData.city, userData.state, userData.country]
+            .filter(Boolean)
+            .join(", ") || "Not specified";
+
+        setFormData((prev) => ({
+          ...prev,
+          name: userData.userName,
+          phone: userData.phone,
+          bio: userData.bio,
+          location: location,
+        }));
+      }
     } catch (error) {
-      toast.error("Failed to update profile");
+      console.error("Error saving profile:", error);
+      setError("Failed to update profile");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -89,8 +197,26 @@ const TeacherProfile = () => {
     setFormData({ ...formData, [field]: newArray });
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="flex items-center space-x-2">
+          <FaSpinner className="w-6 h-6 animate-spin text-blue-600" />
+          <span className="text-gray-600">Loading profile...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -111,10 +237,15 @@ const TeacherProfile = () => {
               </button>
               <button
                 onClick={handleSave}
-                className="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-cyan-600 transition-all duration-200 flex items-center space-x-2"
+                disabled={saving}
+                className="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-cyan-600 transition-all duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <FaSave className="w-4 h-4" />
-                <span>Save Changes</span>
+                {saving ? (
+                  <FaSpinner className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FaSave className="w-4 h-4" />
+                )}
+                <span>{saving ? "Saving..." : "Save Changes"}</span>
               </button>
             </>
           ) : (
@@ -135,7 +266,7 @@ const TeacherProfile = () => {
           <div className="bg-white rounded-lg border p-6 text-center">
             <div className="relative inline-block mb-4">
               <img
-                src="https://ui-avatars.com/api/?name=Dr+Sarah+Johnson&size=200&background=3b82f6&color=fff"
+                src={formData.profileImage}
                 alt="Profile"
                 className="w-32 h-32 rounded-full mx-auto border-4 border-gray-200"
               />
@@ -173,15 +304,11 @@ const TeacherProfile = () => {
             <div className="space-y-3 text-left">
               <div className="flex items-center space-x-3">
                 <FaEnvelope className="w-4 h-4 text-gray-400" />
-                {isEditing ? (
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                ) : (
-                  <span className="text-gray-600">{formData.email}</span>
+                <span className="text-gray-600">{formData.email}</span>
+                {isEditing && (
+                  <span className="text-xs text-gray-500">
+                    (Cannot be changed)
+                  </span>
                 )}
               </div>
 
@@ -212,22 +339,6 @@ const TeacherProfile = () => {
                   />
                 ) : (
                   <span className="text-gray-600">{formData.location}</span>
-                )}
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <FaGraduationCap className="w-4 h-4 text-gray-400" />
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={formData.department}
-                    onChange={(e) =>
-                      handleInputChange("department", e.target.value)
-                    }
-                    className="flex-1 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                ) : (
-                  <span className="text-gray-600">{formData.department}</span>
                 )}
               </div>
             </div>

@@ -16,20 +16,28 @@ import {
   toggleAssignmentStatus,
   updateAssignment,
 } from "../controllers/assignmentControllers.js";
-import { getTeacherStats } from "../controllers/TeacherControllers.js";
+import {
+  getTeacherStats,
+  updateCoursesInstructor,
+} from "../controllers/TeacherControllers.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 // Dashboard stats
 router.get("/dashboard-stats", authenticateToken, getTeacherStats);
+router.post(
+  "/update-courses-instructor",
+  authenticateToken,
+  updateCoursesInstructor
+);
 
 router.get("/get-all-courses", getCourses);
 router.get("/courses/:courseId/lectures", getLectures);
 router.get("/courses/:courseId/assignments", getCourseAssignments);
 router.get("/assignments/:assignmentId", getAssignmentById);
 
-router.post("/courses/add-new-course", createcourse);
+router.post("/courses/add-new-course", authenticateToken, createcourse);
 router.post("/courses/:courseId/assignments", createAssignment);
 router.post("/courses/:courseId/lectures", addLectures);
 

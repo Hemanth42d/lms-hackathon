@@ -340,11 +340,11 @@ const StudentCourses = () => {
                   title: course.title,
                   duration: course.duration,
                   instructor:
-                    (typeof course.instructor === "object"
-                      ? course.instructor?.userName
-                      : course.instructor) ||
-                    course.createdBy?.name ||
-                    "Unknown Instructor",
+                    (typeof course.instructor === "object" && course.instructor
+                      ? course.instructor.userName
+                      : typeof course.instructor === "string"
+                      ? course.instructor
+                      : course.createdBy?.name) || "Unknown Instructor",
                   instructorId:
                     typeof course.instructor === "object"
                       ? course.instructor?._id
