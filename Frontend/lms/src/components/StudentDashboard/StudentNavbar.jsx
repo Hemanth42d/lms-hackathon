@@ -58,17 +58,6 @@ const StudentNavbar = ({ toggleSidebar }) => {
             </span>
           </button>
 
-          {/* Messages - Links to Messages Page */}
-          <button
-            onClick={() => navigate("/student/messages")}
-            className="relative text-gray-600 hover:text-gray-900 cursor-pointer transition-colors hidden sm:block"
-          >
-            <FaEnvelope className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-semibold">
-              5
-            </span>
-          </button>
-
           {/* Profile */}
           <div className="flex items-center space-x-2 cursor-pointer">
             <img
