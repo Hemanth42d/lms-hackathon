@@ -1,89 +1,51 @@
-import {
-  FaBook,
-  FaClipboardList,
-  FaEnvelope,
-  FaCalendarAlt,
-  FaArrowRight,
-} from "react-icons/fa";
-import { useNavigate } from "react-router";
+import { FaBook, FaClipboardList, FaEnvelope, FaCalendarAlt, FaArrowRight } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import StatsCard from "../components/StudentDashboard/StatsCard";
-import CourseCard from "../components/StudentDashboard/CourseCard";
 import AssignmentsTable from "../components/StudentDashboard/AssignmentsTable";
+import { useEffect, useMemo, useState } from "react";
+import axiosInstance from "../../utils/axiosInstance";
+import { useAuth } from "../../context/AuthContext";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [myCourses, setMyCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [assignments, setAssignments] = useState([]);
 
-  const stats = [
-    {
-      title: "Active Courses",
-      value: "3",
-      icon: <FaBook className="w-6 h-6 text-blue-600" />,
-      bgColor: "bg-blue-100",
-    },
-    {
-      title: "Assignments Due",
-      value: "2",
-      icon: <FaClipboardList className="w-6 h-6 text-orange-600" />,
-      bgColor: "bg-orange-100",
-    },
-    {
-      title: "Messages",
-      value: "5",
-      icon: <FaEnvelope className="w-6 h-6 text-green-600" />,
-      bgColor: "bg-green-100",
-    },
-    {
-      title: "Upcoming Events",
-      value: "1",
-      icon: <FaCalendarAlt className="w-6 h-6 text-purple-600" />,
-      bgColor: "bg-purple-100",
-    },
-  ];
+  useEffect(() => {
+    let isMounted = true;
+    const fetchMy = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axiosInstance.get("/my-courses", { params: { userId: user?._id } });
+        if (!isMounted) return;
+        setMyCourses(Array.isArray(data?.courses) ? data.courses : []);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    if (user?._id) fetchMy();
+    const refresh = () => fetchMy();
+    window.addEventListener("enrollment-updated", refresh);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("enrollment-updated", refresh);
+    };
+  }, [user?._id]);
 
-  const courses = [
-    {
-      title: "Introduction to Data Science",
-      instructor: "Instructor: Dr. Evelyn Reed",
-      image:
-        "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400",
-      bgColor: "bg-green-100",
-    },
-    {
-      title: "Advanced Calculus",
-      instructor: "Instructor: Prof. Charles Bennett",
-      image:
-        "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400",
-      bgColor: "bg-cyan-100",
-    },
-    {
-      title: "Digital Marketing Fundamentals",
-      instructor: "Instructor: Ms. Olivia Carter",
-      image:
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400",
-      bgColor: "bg-orange-100",
-    },
-  ];
-
-  const assignments = [
-    {
-      course: "Introduction to Data Science",
-      assignment: "Project 1: Data Analysis",
-      dueDate: "October 20, 2024",
-      status: "In Progress",
-    },
-    {
-      course: "Advanced Calculus",
-      assignment: "Problem Set 3",
-      dueDate: "October 25, 2024",
-      status: "Not Started",
-    },
-    {
-      course: "Digital Marketing Fundamentals",
-      assignment: "Campaign Proposal",
-      dueDate: "November 5, 2024",
-      status: "Submitted",
-    },
-  ];
+  const stats = useMemo(() => {
+    const active = myCourses.filter((c) => c.status === "In Progress").length;
+    const completed = myCourses.filter((c) => c.status === "Completed").length;
+    const upcoming = 0; // placeholder until calendar/events exist
+    const messages = 0; // can be wired to real backend later
+    return [
+      { title: "Active Courses", value: String(active), icon: <FaBook className="w-6 h-6 text-blue-600" />, bgColor: "bg-blue-100" },
+      { title: "Completed", value: String(completed), icon: <FaClipboardList className="w-6 h-6 text-orange-600" />, bgColor: "bg-orange-100" },
+      { title: "Messages", value: String(messages), icon: <FaEnvelope className="w-6 h-6 text-green-600" />, bgColor: "bg-green-100" },
+      { title: "Upcoming Events", value: String(upcoming), icon: <FaCalendarAlt className="w-6 h-6 text-purple-600" />, bgColor: "bg-purple-100" },
+    ];
+  }, [myCourses]);
 
   return (
     <div className="space-y-6">
@@ -123,23 +85,38 @@ const StudentDashboard = () => {
           </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {courses.map((course, index) => (
-            <CourseCard
-              key={index}
-              title={course.title}
-              instructor={course.instructor}
-              image={course.image}
-              bgColor={course.bgColor}
-            />
+          {myCourses.slice(0, 3).map((course) => (
+            <div key={course.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="relative h-40">
+                <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+              </div>
+              <div className="p-4">
+                <h3 className="font-semibold text-gray-900 line-clamp-2">{course.title}</h3>
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${course.progress}%` }}></div>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-600 mt-1">
+                    <span>{course.lessonsCompleted} / {course.totalLessons} lessons</span>
+                    <span className="font-semibold text-blue-600">{course.progress}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           ))}
+          {myCourses.length === 0 && !loading && (
+            <div className="text-gray-600">No enrolled courses yet.</div>
+          )}
         </div>
       </div>
 
-      {/* Assignments Section */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Assignments</h2>
-        <AssignmentsTable assignments={assignments} />
-      </div>
+      {/* Assignments Section (renders when assignments are available) */}
+      {assignments.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Assignments</h2>
+          <AssignmentsTable assignments={assignments} />
+        </div>
+      )}
     </div>
   );
 };

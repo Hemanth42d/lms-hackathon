@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import toast from "react-hot-toast";
 import axiosInstance from "../../utils/axiosInstance";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUser, setToken } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -41,12 +43,9 @@ const Login = () => {
         role: formData.role,
       });
 
-      // Store token and user data
-      // const { token, user } = response.data;
-      // localStorage.setItem("token", token);
-      // localStorage.setItem("userRole", user.role);
-      // localStorage.setItem("userId", user._id);
-      // localStorage.setItem("userName", user.userName);
+      const { token, user } = response.data;
+      setToken(token);
+      setUser(user);
 
       toast.success("Login successful!");
 

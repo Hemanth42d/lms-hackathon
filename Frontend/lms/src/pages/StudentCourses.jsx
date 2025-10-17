@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import axiosInstance from "../../utils/axiosInstance";
+import { useAuth } from "../../context/AuthContext";
 import { FaSearch } from "react-icons/fa";
 import CourseCardEnrollment from "../components/StudentDashboard/CourseCardEnrollment";
 import CourseFilter from "../components/StudentDashboard/CourseFilter";
@@ -19,6 +21,7 @@ const StudentCourses = () => {
     error,
     fetchCourses,
   } = useCourses();
+  const { user } = useAuth();
 
   // Extract unique categories from real course data
   const categories = [
@@ -68,11 +71,19 @@ const StudentCourses = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleEnroll = (course) => {
-    // Handle enrollment logic
-    console.log("Enrolling in:", course.title);
-    // You can add API call here to enroll the student
-    alert(`Enrolling in: ${course.title}`);
+  const handleEnroll = async (course) => {
+    try {
+      const userId = user?._id;
+      await axiosInstance.post("/enroll", { userId, courseId: course.id });
+      window.dispatchEvent(new CustomEvent("enrollment-updated"));
+      if (course.openMessages && course.instructorId) {
+        // Navigate to messages page and optionally preselect instructor conversation in future
+        window.location.href = "/student/messages";
+      }
+    } catch (e) {
+      console.error("Enroll failed", e);
+      alert(e?.response?.data?.message || e.message);
+    }
   };
 
   // Show loading state
@@ -298,9 +309,11 @@ const StudentCourses = () => {
                   title: course.title,
                   duration: course.duration,
                   instructor:
-                    course.instructor ||
+                    (typeof course.instructor === "object" ? course.instructor?.userName : course.instructor) ||
                     course.createdBy?.name ||
                     "Unknown Instructor",
+                  instructorId:
+                    (typeof course.instructor === "object" ? course.instructor?._id : null),
                   category: course.category,
                   image:
                     course.thumbnailUrl ||

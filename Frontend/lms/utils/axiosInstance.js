@@ -1,7 +1,8 @@
 import axios from "axios";
 
+const backendBase = (import.meta.env.VITE_BACKEND_URL || "").replace(/\/$/, "");
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
+  baseURL: `${backendBase}/api`,
   headers: {
     "Content-Type": "application/json",
   },
@@ -12,8 +13,10 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.log("API Error:", error.response?.data || error.message);
-    console.log("Full URL:", error.config?.url);
+    if (import.meta.env.DEV) {
+      console.log("API Error:", error.response?.data || error.message);
+      console.log("Full URL:", error.config?.url);
+    }
     return Promise.reject(error);
   }
 );

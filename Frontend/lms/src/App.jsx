@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router";
+import { Routes, Route, Navigate } from "react-router-dom";
 import LandingPageLayout from "./components/LandingPageComponents/LandingPageLayout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -25,11 +25,13 @@ import CourseDetail from "./pages/CourseDetail";
 import AdminLayout from "./components/adminDashboard/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CourseContext from "../context/CourseContext";
+import AuthProvider from "../context/AuthContext";
 
 function App() {
   return (
     <>
       <div className="App">
+        <AuthProvider>
         <CourseContext>
           <Routes>
             {/* Public Routes */}
@@ -48,7 +50,7 @@ function App() {
               <Route path="courses" element={<StudentCourses />} />
               <Route path="my-courses" element={<StudentMyCourses />} />
               <Route
-                path="/student/course/:courseId/learn"
+                path="course/:courseId/learn"
                 element={<StudentCourseLearning />}
               />
               <Route path="calendar" element={<StudentCalendar />} />
@@ -92,6 +94,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </CourseContext>
+        </AuthProvider>
       </div>
     </>
   );

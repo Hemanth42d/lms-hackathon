@@ -96,13 +96,24 @@ const CourseCardEnrollment = ({ course, onEnroll }) => {
           </p>
         )}
 
-        {/* Enroll Button */}
-        <button
-          onClick={() => onEnroll(course)}
-          className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-sm shadow-md hover:shadow-lg transform hover:scale-[1.02] duration-200"
-        >
-          Enroll Now
-        </button>
+        {/* Enroll / Message Actions */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => onEnroll(course)}
+            className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-sm shadow-md hover:shadow-lg transform hover:scale-[1.02] duration-200"
+          >
+            Enroll Now
+          </button>
+          {course.instructorId && (
+            <button
+              onClick={() => onEnroll({ ...course, openMessages: true })}
+              title="Message Instructor"
+              className="px-3 py-2.5 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+            >
+              Message
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

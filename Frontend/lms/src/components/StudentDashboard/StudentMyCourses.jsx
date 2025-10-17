@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router";
+
+import { useNavigate } from "react-router-dom";
 import {
   FaSearch,
   FaClock,
@@ -11,106 +11,50 @@ import {
   FaFire,
 } from "react-icons/fa";
 import CourseCardDetailed from "../../components/StudentDashboard/CourseCardDetailed";
+import { useEffect, useMemo, useState } from "react";
+import axiosInstance from "../../../utils/axiosInstance";
+import { useAuth } from "../../../context/AuthContext";
 
 const StudentMyCourses = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Enrolled courses with progress
-  const enrolledCourses = [
-    {
-      id: 1,
-      title: "Introduction to Python Programming",
-      duration: "4 hours",
-      instructor: "Alex Turner",
-      category: "Technology",
-      image:
-        "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=500",
-      progress: 65,
-      lastAccessed: "2 days ago",
-      status: "In Progress",
-      lessonsCompleted: 13,
-      totalLessons: 20,
-      nextLesson: "Functions and Methods",
-    },
-    {
-      id: 2,
-      title: "Digital Marketing Fundamentals",
-      duration: "6 hours",
-      instructor: "Sarah Chen",
-      category: "Marketing",
-      image:
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500",
-      progress: 30,
-      lastAccessed: "5 days ago",
-      status: "In Progress",
-      lessonsCompleted: 6,
-      totalLessons: 20,
-      nextLesson: "Social Media Strategy",
-    },
-    {
-      id: 3,
-      title: "Graphic Design Masterclass",
-      duration: "5 hours",
-      instructor: "Emily Carter",
-      category: "Design",
-      image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500",
-      progress: 100,
-      lastAccessed: "1 week ago",
-      status: "Completed",
-      completedDate: "October 1, 2024",
-      lessonsCompleted: 15,
-      totalLessons: 15,
-      certificateEarned: true,
-    },
-    {
-      id: 4,
-      title: "Financial Modeling and Analysis",
-      duration: "8 hours",
-      instructor: "David Lee",
-      category: "Business",
-      image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500",
-      progress: 45,
-      lastAccessed: "1 day ago",
-      status: "In Progress",
-      lessonsCompleted: 9,
-      totalLessons: 20,
-      nextLesson: "DCF Model Building",
-    },
-    {
-      id: 5,
-      title: "Web Development Bootcamp",
-      duration: "12 hours",
-      instructor: "Michael Brown",
-      category: "Technology",
-      image:
-        "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=500",
-      progress: 20,
-      lastAccessed: "3 days ago",
-      status: "In Progress",
-      lessonsCompleted: 8,
-      totalLessons: 40,
-      nextLesson: "CSS Flexbox",
-    },
-    {
-      id: 6,
-      title: "Data Science with Python",
-      duration: "10 hours",
-      instructor: "Dr. Emma Wilson",
-      category: "Technology",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500",
-      progress: 100,
-      lastAccessed: "2 weeks ago",
-      status: "Completed",
-      completedDate: "September 20, 2024",
-      lessonsCompleted: 25,
-      totalLessons: 25,
-      certificateEarned: true,
-    },
-  ];
+  useEffect(() => {
+    let isMounted = true;
+    const fetchMyCourses = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // TODO: Replace with real authenticated user id from auth context/cookie
+        const userId = user?._id;
+        const { data } = await axiosInstance.get(`/my-courses`, {
+          params: { userId },
+        });
+        if (!isMounted) return;
+        const list = Array.isArray(data?.courses) ? data.courses : [];
+        setEnrolledCourses(list);
+      } catch (e) {
+        if (!isMounted) return;
+        setError(e?.response?.data?.message || e.message);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchMyCourses();
+    const refresh = () => fetchMyCourses();
+    window.addEventListener("enrollment-updated", refresh);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("enrollment-updated", refresh);
+    };
+  }, [user?._id]);
 
-  const filteredCourses = enrolledCourses.filter((course) => {
+  const filteredCourses = useMemo(() => enrolledCourses.filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.instructor.toLowerCase().includes(searchQuery.toLowerCase());
@@ -119,19 +63,16 @@ const StudentMyCourses = () => {
       filterStatus === "All" || course.status === filterStatus;
 
     return matchesSearch && matchesFilter;
-  });
+  }), [enrolledCourses, searchQuery, filterStatus]);
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: enrolledCourses.length,
-    inProgress: enrolledCourses.filter((c) => c.status === "In Progress")
-      .length,
+    inProgress: enrolledCourses.filter((c) => c.status === "In Progress").length,
     completed: enrolledCourses.filter((c) => c.status === "Completed").length,
-    totalHours: enrolledCourses.reduce((acc, course) => {
-      return acc + parseInt(course.duration);
-    }, 0),
-  };
+    totalHours: enrolledCourses.reduce((acc, course) => acc + parseInt(course.duration || 0), 0),
+  }), [enrolledCourses]);
 
-  const getContinueLearningCourses = () => {
+  const continueLearningCourses = useMemo(() => {
     return enrolledCourses
       .filter((c) => c.status === "In Progress")
       .sort((a, b) => {
@@ -140,9 +81,7 @@ const StudentMyCourses = () => {
         return dateB - dateA;
       })
       .slice(0, 3);
-  };
-
-  const continueLearningCourses = getContinueLearningCourses();
+  }, [enrolledCourses]);
 
   return (
     <div className="space-y-6">
