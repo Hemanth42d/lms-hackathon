@@ -1,5 +1,6 @@
 import assignmentModel from "../models/assignment-model.js";
 import courseModel from "../models/course-model.js";
+import Submission from "../models/submission-model.js";
 import mongoose from "mongoose";
 
 export const createAssignment = async (req, res) => {
@@ -278,6 +279,322 @@ export const toggleAssignmentStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error toggling assignment status:", error);
+    res.status(500).json({
+      error: true,
+      message: error.message,
+    });
+  }
+};
+
+// Submit assignment with auto-grading
+export const submitAssignment = async (req, res) => {
+  try {
+    const { courseId, assignmentId } = req.params;
+    const { answers } = req.body; // Array of selected option indices
+    // TODO: Implement proper auth middleware - for now using a default user ID
+    const userId = req.user?.id || "670d1bc1ef8d5ba6bd1fb3a6"; // Default student ID
+
+    console.log("Submit assignment - userId:", userId); // Debug log
+
+    // Validate parameters
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({
+        error: true,
+        message: "Invalid course ID format",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+      return res.status(400).json({
+        error: true,
+        message: "Invalid assignment ID format",
+      });
+    }
+
+    if (!answers || !Array.isArray(answers)) {
+      return res.status(400).json({
+        error: true,
+        message: "Answers array is required",
+      });
+    }
+
+    // Fetch the assignment
+    const assignment = await assignmentModel.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({
+        error: true,
+        message: "Assignment not found",
+      });
+    }
+
+    // Verify assignment belongs to the course
+    if (assignment.courseId.toString() !== courseId) {
+      return res.status(400).json({
+        error: true,
+        message: "Assignment does not belong to the specified course",
+      });
+    }
+
+    // Check if assignment is quiz type (only quiz type supports auto-grading)
+    if (assignment.type !== "quiz") {
+      return res.status(400).json({
+        error: true,
+        message: "Auto-grading is only available for quiz assignments",
+      });
+    }
+
+    // Check if student has already submitted this assignment
+    const existingSubmission = await Submission.findOne({
+      assignmentId: assignmentId,
+      studentId: userId,
+    });
+
+    if (existingSubmission) {
+      return res.status(400).json({
+        error: true,
+        message:
+          "You have already submitted this assignment. Only one submission is allowed.",
+      });
+    }
+
+    // Check if assignment is still open for submission
+    const now = new Date();
+    const dueDate = new Date(assignment.dueDate);
+    if (now > dueDate) {
+      return res.status(400).json({
+        error: true,
+        message: "Assignment submission deadline has passed",
+      });
+    }
+
+    // Validate answers length matches questions length
+    if (answers.length !== assignment.questions.length) {
+      return res.status(400).json({
+        error: true,
+        message: `Expected ${assignment.questions.length} answers, received ${answers.length}`,
+      });
+    }
+
+    // Calculate score with auto-grading
+    let totalScore = 0;
+    let maxScore = 0;
+    const detailedResults = [];
+
+    assignment.questions.forEach((question, index) => {
+      const studentAnswer = answers[index];
+      const correctAnswer = question.correctAnswer;
+      const questionMarks = question.marks || 1;
+
+      maxScore += questionMarks;
+
+      let isCorrect = false;
+      if (studentAnswer !== null && studentAnswer !== undefined) {
+        isCorrect = parseInt(studentAnswer) === parseInt(correctAnswer);
+        if (isCorrect) {
+          totalScore += questionMarks;
+        }
+      }
+
+      detailedResults.push({
+        questionIndex: index,
+        question: question.question,
+        studentAnswer: studentAnswer,
+        correctAnswer: correctAnswer,
+        isCorrect: isCorrect,
+        marksAwarded: isCorrect ? questionMarks : 0,
+        maxMarks: questionMarks,
+      });
+    });
+
+    // Calculate percentage
+    const percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+
+    // Create and save submission record
+    const submissionData = {
+      assignmentId: assignmentId,
+      courseId: courseId,
+      studentId: userId,
+      answers: answers,
+      score: totalScore,
+      maxScore: maxScore,
+      percentage: percentage,
+      submittedAt: new Date(),
+      gradedAt: new Date(),
+      autoGraded: true,
+      detailedResults: detailedResults,
+      status: "graded",
+    };
+
+    // Save submission to database
+    const submission = new Submission(submissionData);
+    await submission.save();
+
+    res.json({
+      success: true,
+      message: "Assignment submitted and graded successfully",
+      submission: {
+        assignmentId: assignmentId,
+        score: totalScore,
+        maxScore: maxScore,
+        percentage: percentage.toFixed(2),
+        submittedAt: submissionData.submittedAt,
+        gradedAt: submissionData.gradedAt,
+        autoGraded: true,
+      },
+      detailedResults: detailedResults,
+    });
+  } catch (error) {
+    console.error("Error submitting assignment:", error);
+    res.status(500).json({
+      error: true,
+      message: error.message,
+    });
+  }
+};
+
+// Get assignments for a course with student submission status
+export const getAssignmentsWithSubmissions = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    // TODO: Implement proper auth middleware - for now using a default user ID
+    const userId = req.user?.id || "670d1bc1ef8d5ba6bd1fb3a6"; // Default student ID
+
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({
+        error: true,
+        message: "Invalid course ID format",
+      });
+    }
+
+    // Get all assignments for the course
+    const assignments = await assignmentModel
+      .find({ courseId })
+      .sort({ createdAt: -1 });
+
+    if (!assignments || assignments.length === 0) {
+      return res.json({
+        success: true,
+        message: "No assignments found for this course",
+        assignments: [],
+      });
+    }
+
+    // Get all submissions for this student for these assignments
+    const assignmentIds = assignments.map((assignment) => assignment._id);
+    const submissions = await Submission.find({
+      assignmentId: { $in: assignmentIds },
+      studentId: userId,
+    });
+
+    // Create a map of submissions by assignment ID
+    const submissionMap = {};
+    submissions.forEach((submission) => {
+      submissionMap[submission.assignmentId.toString()] = submission;
+    });
+
+    // Add submission status to each assignment
+    const assignmentsWithStatus = assignments.map((assignment) => {
+      const submission = submissionMap[assignment._id.toString()];
+
+      let status = "not_started";
+      let score = null;
+      let submissionData = null;
+
+      if (submission) {
+        status = "completed";
+        score = `${submission.score}/${submission.maxScore}`;
+        submissionData = {
+          score: submission.score,
+          maxScore: submission.maxScore,
+          percentage: submission.percentage,
+          submittedAt: submission.submittedAt,
+          detailedResults: submission.detailedResults,
+        };
+      } else {
+        // Check if assignment is overdue
+        const now = new Date();
+        const dueDate = new Date(assignment.dueDate);
+        if (now > dueDate) {
+          status = "overdue";
+        }
+      }
+
+      return {
+        ...assignment.toObject(),
+        status,
+        score,
+        submission: submissionData,
+      };
+    });
+
+    res.json({
+      success: true,
+      assignments: assignmentsWithStatus,
+    });
+  } catch (error) {
+    console.error("Error fetching assignments with submissions:", error);
+    res.status(500).json({
+      error: true,
+      message: error.message,
+    });
+  }
+};
+
+// Get specific submission details
+export const getSubmissionDetails = async (req, res) => {
+  try {
+    const { courseId, assignmentId } = req.params;
+    // TODO: Implement proper auth middleware - for now using a default user ID
+    const userId = req.user?.id || "670d1bc1ef8d5ba6bd1fb3a6"; // Default student ID
+
+    if (
+      !mongoose.Types.ObjectId.isValid(courseId) ||
+      !mongoose.Types.ObjectId.isValid(assignmentId)
+    ) {
+      return res.status(400).json({
+        error: true,
+        message: "Invalid course or assignment ID format",
+      });
+    }
+
+    // Get the assignment
+    const assignment = await assignmentModel.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({
+        error: true,
+        message: "Assignment not found",
+      });
+    }
+
+    // Get the submission
+    const submission = await Submission.findOne({
+      assignmentId: assignmentId,
+      studentId: userId,
+    });
+
+    if (!submission) {
+      return res.status(404).json({
+        error: true,
+        message: "No submission found for this assignment",
+      });
+    }
+
+    res.json({
+      success: true,
+      submission: {
+        submission: {
+          assignmentId: submission.assignmentId,
+          score: submission.score,
+          maxScore: submission.maxScore,
+          percentage: submission.percentage,
+          submittedAt: submission.submittedAt,
+        },
+        detailedResults: submission.detailedResults,
+      },
+      assignment: assignment,
+    });
+  } catch (error) {
+    console.error("Error fetching submission details:", error);
     res.status(500).json({
       error: true,
       message: error.message,

@@ -115,11 +115,16 @@ const CourseLectures = ({ courseId, course }) => {
     if (!lectureId) return;
     if (window.confirm("Are you sure you want to delete this lecture?")) {
       try {
-        await axiosInstance.delete(`/teacher/courses/${courseId}/lectures/${lectureId}`);
+        await axiosInstance.delete(
+          `/teacher/courses/${courseId}/lectures/${lectureId}`
+        );
         await fetchLectures();
         toast.success("Lecture deleted successfully");
       } catch (error) {
-        const msg = error?.response?.data?.message || error.message || "Failed to delete lecture";
+        const msg =
+          error?.response?.data?.message ||
+          error.message ||
+          "Failed to delete lecture";
         toast.error(msg);
       }
     }
@@ -288,7 +293,9 @@ const CourseLectures = ({ courseId, course }) => {
                     <FaEdit className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleDeleteLecture(lecture._id || lecture.id)}
+                    onClick={() =>
+                      handleDeleteLecture(lecture._id || lecture.id)
+                    }
                     className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Delete lecture"
                   >
@@ -410,7 +417,9 @@ const CourseLectures = ({ courseId, course }) => {
                 <input
                   type="url"
                   value={formData.transcriptUrl}
-                  onChange={(e) => handleInputChange("transcriptUrl", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("transcriptUrl", e.target.value)
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="https://drive.google.com/uc?export=download&id=FILE_ID or public .txt"
                 />

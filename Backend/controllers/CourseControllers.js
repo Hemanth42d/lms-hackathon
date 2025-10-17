@@ -29,6 +29,7 @@ import courseModel from "../models/course-model.js";
 import lectureModel from "../models/lecture-model.js";
 import enrollmentModel from "../models/enrollment-model.js";
 import userModel from "../models/user-model.js";
+import LectureProgress from "../models/lecture-progress-model.js";
 
 export const createcourse = async (req, res) => {
   try {
@@ -431,6 +432,83 @@ export const deleteCourse = async (req, res) => {
     await courseModel.findByIdAndDelete(courseId);
     return res.json({ success: true, message: "Course deleted" });
   } catch (error) {
+    return res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+// Mark lecture as complete
+export const markLectureComplete = async (req, res) => {
+  try {
+    const { courseId, lectureId } = req.params;
+
+    // For now, use a default user ID since we don't have authentication
+    // In production, get this from req.user._id
+    const userId = "6740f123456789abcdef0123"; // Temporary fallback
+
+    // Check if lecture exists
+    const lecture = await lectureModel.findById(lectureId);
+    if (!lecture) {
+      return res
+        .status(404)
+        .json({ error: true, message: "Lecture not found" });
+    }
+
+    // Check if course exists
+    const course = await courseModel.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: true, message: "Course not found" });
+    }
+
+    // Create or update lecture progress
+    const progress = await LectureProgress.findOneAndUpdate(
+      { user: userId, lecture: lectureId },
+      {
+        user: userId,
+        course: courseId,
+        lecture: lectureId,
+        completed: true,
+        completedAt: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
+    return res.json({
+      success: true,
+      message: "Lecture marked as complete",
+      progress,
+    });
+  } catch (error) {
+    console.error("Error marking lecture complete:", error);
+    return res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+// Get lecture progress for a course
+export const getLectureProgress = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    // For now, use a default user ID since we don't have authentication
+    // In production, get this from req.user._id
+    const userId = "6740f123456789abcdef0123"; // Temporary fallback
+
+    // Get all completed lectures for this user in this course
+    const progress = await LectureProgress.find({
+      user: userId,
+      course: courseId,
+      completed: true,
+    }).populate("lecture");
+
+    // Extract just the lecture IDs for frontend
+    const completedLectureIds = progress.map((p) => p.lecture._id.toString());
+
+    return res.json({
+      success: true,
+      completedLectures: completedLectureIds,
+      progress,
+    });
+  } catch (error) {
+    console.error("Error getting lecture progress:", error);
     return res.status(500).json({ error: true, message: error.message });
   }
 };
