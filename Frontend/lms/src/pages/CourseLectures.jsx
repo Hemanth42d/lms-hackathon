@@ -109,15 +109,15 @@ const CourseLectures = ({ courseId, course }) => {
   };
 
   const handleDeleteLecture = async (lectureId) => {
+    if (!lectureId) return;
     if (window.confirm("Are you sure you want to delete this lecture?")) {
       try {
-        // TODO: Replace with actual API call
-        // await fetch(`/api/lectures/${lectureId}`, { method: 'DELETE' });
-
+        await axiosInstance.delete(`/teacher/courses/${courseId}/lectures/${lectureId}`);
         await fetchLectures();
         toast.success("Lecture deleted successfully");
       } catch (error) {
-        toast.error("Failed to delete lecture");
+        const msg = error?.response?.data?.message || error.message || "Failed to delete lecture";
+        toast.error(msg);
       }
     }
   };
@@ -208,7 +208,7 @@ const CourseLectures = ({ courseId, course }) => {
         ) : (
           lectures.map((lecture, index) => (
             <div
-              key={lecture.id}
+              key={lecture._id || lecture.id}
               className="bg-white border border-gray-200 rounded-lg p-6"
             >
               <div className="flex items-start justify-between">
@@ -284,7 +284,7 @@ const CourseLectures = ({ courseId, course }) => {
                     <FaEdit className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleDeleteLecture(lecture.id)}
+                    onClick={() => handleDeleteLecture(lecture._id || lecture.id)}
                     className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Delete lecture"
                   >

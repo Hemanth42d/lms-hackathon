@@ -46,6 +46,27 @@ const TeacherCourses = () => {
     }
   }, [courses.length, contextLoading, fetchCourses]);
 
+  useEffect(() => {
+    const onEnrollmentUpdated = () => {
+      fetchCourses();
+    };
+    window.addEventListener("enrollment-updated", onEnrollmentUpdated);
+    const onStorage = (e) => {
+      if (e.key === "enrollment-updated-ts") {
+        fetchCourses();
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    const interval = setInterval(() => {
+      fetchCourses();
+    }, 15000);
+    return () => {
+      window.removeEventListener("enrollment-updated", onEnrollmentUpdated);
+      window.removeEventListener("storage", onStorage);
+      clearInterval(interval);
+    };
+  }, [fetchCourses]);
+
   const handleCreateCourse = () => {
     setModalMode("create");
     setFormData({

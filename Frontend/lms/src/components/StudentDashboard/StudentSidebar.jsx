@@ -3,7 +3,6 @@ import {
   FaTachometerAlt,
   FaBook,
   FaGraduationCap,
-  FaCalendarAlt,
   FaEnvelope,
   FaCog,
   FaTimes,
@@ -28,11 +27,6 @@ const StudentSidebar = ({ sidebarOpen, toggleSidebar }) => {
       name: "My Courses",
       path: "/student/my-courses",
       icon: <FaGraduationCap className="w-5 h-5" />,
-    },
-    {
-      name: "Calendar",
-      path: "/student/calendar",
-      icon: <FaCalendarAlt className="w-5 h-5" />,
     },
     {
       name: "Settings",

@@ -8,7 +8,6 @@ import {
   FaSignOutAlt,
   FaTimes,
   FaGraduationCap,
-  FaCalendarAlt,
 } from "react-icons/fa";
 
 const TeacherSidebar = ({ isOpen, onClose }) => {

@@ -6,7 +6,6 @@ import ForgotPassword from "./pages/ForgotPassword";
 import StudentDashboardLayout from "./pages/StudentDashboardLayout";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentCourses from "./pages/StudentCourses";
-import StudentCalendar from "./pages/StudentCalendar";
 import StudentSettings from "./pages/StudentSettings";
 import StudentMyCourses from "./components/StudentDashboard/StudentMyCourses";
 import StudentNotifications from "./pages/StudentNotifications";
@@ -51,7 +50,7 @@ function App() {
                 path="course/:courseId/learn"
                 element={<StudentCourseLearning />}
               />
-              <Route path="calendar" element={<StudentCalendar />} />
+              {/* Calendar removed */}
               
               <Route path="settings" element={<StudentSettings />} />
               <Route path="notifications" element={<StudentNotifications />} />

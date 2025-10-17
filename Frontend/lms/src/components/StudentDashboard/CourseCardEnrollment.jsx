@@ -7,9 +7,27 @@ import {
   FaRegBookmark,
 } from "react-icons/fa";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 const CourseCardEnrollment = ({ course, onEnroll }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isEnrolledLocal, setIsEnrolledLocal] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
+
+  const handleEnrollClick = async () => {
+    if (isEnrolledLocal || isEnrolling) return;
+    setIsEnrolledLocal(true); // optimistic
+    setIsEnrolling(true);
+    try {
+      await Promise.resolve(onEnroll?.(course));
+      toast.success("Enrolled successfully");
+    } catch (e) {
+      setIsEnrolledLocal(false);
+      toast.error(e?.response?.data?.message || e?.message || "Enroll failed");
+    } finally {
+      setIsEnrolling(false);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 group">
@@ -99,10 +117,15 @@ const CourseCardEnrollment = ({ course, onEnroll }) => {
         {/* Enroll / Message Actions */}
         <div className="flex gap-2">
           <button
-            onClick={() => onEnroll(course)}
-            className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-sm shadow-md hover:shadow-lg transform hover:scale-[1.02] duration-200"
+            onClick={handleEnrollClick}
+            disabled={isEnrolledLocal || isEnrolling}
+            className={`flex-1 py-2.5 rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg transform hover:scale-[1.02] duration-200 ${
+              isEnrolledLocal
+                ? "bg-green-600 text-white hover:bg-green-700 cursor-default"
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            } ${isEnrolling ? "opacity-80 cursor-wait" : ""}`}
           >
-            Enroll Now
+            {isEnrolledLocal ? "Enrolled" : isEnrolling ? "Enrolling..." : "Enroll Now"}
           </button>
           {course.instructorId && (
             <button

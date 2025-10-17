@@ -82,6 +82,9 @@ const StudentCourses = () => {
         await getUser();
       }
       window.dispatchEvent(new CustomEvent("enrollment-updated"));
+      try {
+        localStorage.setItem("enrollment-updated-ts", String(Date.now()));
+      } catch (_) {}
     } catch (e) {
       console.error("Enroll failed", e);
       alert(e?.response?.data?.message || e.message);
