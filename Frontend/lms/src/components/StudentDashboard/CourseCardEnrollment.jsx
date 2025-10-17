@@ -6,13 +6,17 @@ import {
   FaBookmark,
   FaRegBookmark,
 } from "react-icons/fa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const CourseCardEnrollment = ({ course, onEnroll }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [isEnrolledLocal, setIsEnrolledLocal] = useState(false);
+  const [isEnrolledLocal, setIsEnrolledLocal] = useState(!!course?.isEnrolled);
   const [isEnrolling, setIsEnrolling] = useState(false);
+
+  useEffect(() => {
+    setIsEnrolledLocal(!!course?.isEnrolled);
+  }, [course?.isEnrolled]);
 
   const handleEnrollClick = async () => {
     if (isEnrolledLocal || isEnrolling) return;

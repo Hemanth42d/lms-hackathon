@@ -57,13 +57,10 @@ const TeacherCourses = () => {
       }
     };
     window.addEventListener("storage", onStorage);
-    const interval = setInterval(() => {
-      fetchCourses();
-    }, 15000);
+    // Removed periodic polling to avoid blinking
     return () => {
       window.removeEventListener("enrollment-updated", onEnrollmentUpdated);
       window.removeEventListener("storage", onStorage);
-      clearInterval(interval);
     };
   }, [fetchCourses]);
 
@@ -261,9 +258,7 @@ const TeacherCourses = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active Courses</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {courses.filter((c) => c.status === "active").length}
-              </p>
+              <p className="text-2xl font-bold text-gray-900">{courses.length}</p>
             </div>
             <FaEye className="w-8 h-8 text-green-600" />
           </div>
@@ -286,17 +281,7 @@ const TeacherCourses = () => {
             <FaUsers className="w-8 h-8 text-blue-600" />
           </div>
         </div>
-        <div className="bg-white rounded-lg p-4 border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Draft Courses</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {courses.filter((c) => c.status === "draft").length}
-              </p>
-            </div>
-            <FaClock className="w-8 h-8 text-orange-600" />
-          </div>
-        </div>
+        {/* Draft Courses removed */}
       </div>
 
       {/* Courses Grid */}

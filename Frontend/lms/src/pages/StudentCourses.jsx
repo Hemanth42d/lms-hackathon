@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axiosInstance from "../../utils/axiosInstance";
 import { useAuth } from "../../context/AuthContext";
 import { FaSearch } from "react-icons/fa";
@@ -23,6 +23,7 @@ const StudentCourses = () => {
     getUser,
   } = useCourses();
   const { user } = useAuth();
+  const [enrolledIds, setEnrolledIds] = useState(new Set());
 
   // Extract unique categories from real course data
   const categories = [
@@ -58,6 +59,29 @@ const StudentCourses = () => {
     setCurrentPage(1);
   }, [searchQuery, selectedCategory, courses]);
 
+  // Load user's enrolled courses to mark cards
+  useEffect(() => {
+    let isMounted = true;
+    const loadEnrolled = async () => {
+      try {
+        const userId =
+          user?._id || JSON.parse(localStorage.getItem("user") || "null")?._id;
+        if (!userId) return;
+        const { data } = await axiosInstance.get(`/my-courses`, { params: { userId } });
+        if (!isMounted) return;
+        const ids = new Set((data?.courses || []).map((c) => c.courseId || c.id));
+        setEnrolledIds(ids);
+      } catch (_) {}
+    };
+    loadEnrolled();
+    const refresh = () => loadEnrolled();
+    window.addEventListener("enrollment-updated", refresh);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("enrollment-updated", refresh);
+    };
+  }, [user?._id]);
+
   // Calculate pagination
   const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
   const indexOfLastCourse = currentPage * coursesPerPage;
@@ -85,6 +109,8 @@ const StudentCourses = () => {
       try {
         localStorage.setItem("enrollment-updated-ts", String(Date.now()));
       } catch (_) {}
+      // Optimistically mark this course as enrolled in local set
+      setEnrolledIds((prev) => new Set([...Array.from(prev), course.id]));
     } catch (e) {
       console.error("Enroll failed", e);
       alert(e?.response?.data?.message || e.message);
@@ -337,6 +363,7 @@ const StudentCourses = () => {
                     0,
                   description: course.description,
                   status: course.status,
+                  isEnrolled: enrolledIds.has(course._id || course.id),
                 }}
                 onEnroll={handleEnroll}
               />

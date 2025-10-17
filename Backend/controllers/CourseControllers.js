@@ -39,11 +39,28 @@ export const getCourses = async (req, res) => {
   try {
     const courses = await courseModel
       .find({})
-      .populate({ path: "instructor", select: "userName email" });
+      .populate({ path: "instructor", select: "userName email" })
+      .lean();
+
+    const courseIds = (courses || []).map((c) => c._id);
+    let countsByCourse = {};
+    if (courseIds.length) {
+      const agg = await enrollmentModel.aggregate([
+        { $match: { course: { $in: courseIds } } },
+        { $group: { _id: "$course", count: { $sum: 1 } } },
+      ]);
+      countsByCourse = Object.fromEntries(agg.map((a) => [String(a._id), a.count]));
+    }
+
+    const withCounts = (courses || []).map((c) => ({
+      ...c,
+      studentsCount: countsByCourse[String(c._id)] || 0,
+    }));
+
     return res.json({
       success: true,
       message: "Courses fetched successfully",
-      courses: courses || [],
+      courses: withCounts,
     });
   } catch (error) {
     res.json({ error: true, message: error.message });
@@ -110,10 +127,16 @@ export const enrollInCourse = async (req, res) => {
     }
 
     const existing = await enrollmentModel.findOne({ user: userId, course: courseId });
-    if (!existing) {
-      await enrollmentModel.create({ user: userId, course: courseId, progress: 0 });
+    if (existing) {
+      // Ensure user doc is in sync but do not create duplicate enrollment
+      await userModel.findByIdAndUpdate(
+        userId,
+        { $addToSet: { enrolledCourses: courseId } },
+        { new: true }
+      );
+      return res.status(200).json({ success: true, alreadyEnrolled: true, message: "User already enrolled" });
     }
-    // add course to user's enrolledCourses array if not already present
+    await enrollmentModel.create({ user: userId, course: courseId, progress: 0 });
     await userModel.findByIdAndUpdate(
       userId,
       { $addToSet: { enrolledCourses: courseId } },
