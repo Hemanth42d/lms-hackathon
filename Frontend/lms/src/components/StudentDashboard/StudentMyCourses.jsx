@@ -31,7 +31,7 @@ const StudentMyCourses = () => {
         setLoading(true);
         setError(null);
         // TODO: Replace with real authenticated user id from auth context/cookie
-        const userId = user?._id;
+        const userId = user?._id || JSON.parse(localStorage.getItem("user") || "null")?._id;
         const { data } = await axiosInstance.get(`/my-courses`, {
           params: { userId },
         });

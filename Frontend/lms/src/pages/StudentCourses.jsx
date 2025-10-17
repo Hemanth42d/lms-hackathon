@@ -73,7 +73,7 @@ const StudentCourses = () => {
 
   const handleEnroll = async (course) => {
     try {
-      const userId = user?._id;
+      const userId = user?._id || JSON.parse(localStorage.getItem("user") || "null")?._id;
       await axiosInstance.post("/enroll", { userId, courseId: course.id });
       window.dispatchEvent(new CustomEvent("enrollment-updated"));
       if (course.openMessages && course.instructorId) {

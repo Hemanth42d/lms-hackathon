@@ -57,34 +57,30 @@ export const getMyCourses = async (req, res) => {
       return res.status(400).json({ error: true, message: "userId is required" });
     }
 
-    const user = await userModel.findById(userId);
+    const user = await userModel.findById(userId).populate({ path: "enrolledCourses", select: "title description category thumbnailUrl duration lectures assignments discussions instructor" });
     if (!user) {
       return res.status(404).json({ error: true, message: "User not found" });
     }
 
-    const enrollments = await enrollmentModel
-      .find({ user: userId })
-      .populate({
-        path: "course",
-        select: "title description category thumbnailUrl duration lectures assignments discussions",
-      })
-      .lean();
+    const enrollments = await enrollmentModel.find({ user: userId }).lean();
 
-    const results = (enrollments || []).map((e) => {
-      const totalLessons = Array.isArray(e.course?.lectures) ? e.course.lectures.length : 0;
-      const lessonsCompleted = Array.isArray(e.completedLectures) ? e.completedLectures.length : 0;
-      const lastAccessed = e.lastAccessed || e.enrolledAt;
+    const results = (user.enrolledCourses || []).map((c) => {
+      const e = enrollments.find((en) => String(en.course) === String(c._id));
+      const totalLessons = Array.isArray(c.lectures) ? c.lectures.length : 0;
+      const lessonsCompleted = Array.isArray(e?.completedLectures) ? e.completedLectures.length : 0;
+      const lastAccessed = e?.lastAccessed || e?.enrolledAt;
+      const progress = e?.progress ?? (totalLessons ? Math.round((lessonsCompleted / totalLessons) * 100) : 0);
       return {
-        id: e._id,
-        courseId: e.course?._id,
-        title: e.course?.title,
-        duration: e.course?.duration || "0 hours",
-        instructor: e.course?.instructor || undefined,
-        category: e.course?.category,
-        image: e.course?.thumbnailUrl || "",
-        progress: e.progress ?? (totalLessons ? Math.round((lessonsCompleted / totalLessons) * 100) : 0),
+        id: c._id,
+        courseId: c._id,
+        title: c.title,
+        duration: c.duration || "0 hours",
+        instructor: c.instructor,
+        category: c.category,
+        image: c.thumbnailUrl || "",
+        progress,
         lastAccessed,
-        status: e.progress === 100 ? "Completed" : "In Progress",
+        status: progress === 100 ? "Completed" : "In Progress",
         lessonsCompleted,
         totalLessons,
       };
@@ -114,12 +110,16 @@ export const enrollInCourse = async (req, res) => {
     }
 
     const existing = await enrollmentModel.findOne({ user: userId, course: courseId });
-    if (existing) {
-      return res.json({ success: true, message: "Already enrolled", enrollment: existing });
+    if (!existing) {
+      await enrollmentModel.create({ user: userId, course: courseId, progress: 0 });
     }
-
-    const enrollment = await enrollmentModel.create({ user: userId, course: courseId, progress: 0 });
-    return res.status(201).json({ success: true, message: "Enrolled successfully", enrollment });
+    // add course to user's enrolledCourses array if not already present
+    await userModel.findByIdAndUpdate(
+      userId,
+      { $addToSet: { enrolledCourses: courseId } },
+      { new: true }
+    );
+    return res.status(201).json({ success: true, message: "Enrolled successfully" });
   } catch (error) {
     return res.status(500).json({ error: true, message: error.message });
   }
