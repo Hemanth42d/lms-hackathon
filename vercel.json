@@ -1,13 +1,15 @@
 {
   "buildCommand": "cd Frontend/lms && npm install && npm run build",
-  "outputDirectory": "Frontend/lms/dist",
   "installCommand": "cd Frontend/lms && npm install",
+  "outputDirectory": "Frontend/lms/dist",
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
+  "cleanUrls": true,
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/(.*)",
@@ -27,7 +29,7 @@
       ]
     },
     {
-      "source": "/static/(.*)",
+      "source": "/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
