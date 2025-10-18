@@ -289,12 +289,12 @@ pm2 startup  # Follow the instructions to enable auto-start
 
 Ensure the following inbound rules are set:
 
-| Type       | Port | Source    | Description    |
-| ---------- | ---- | --------- | -------------- |
-| SSH        | 22   | Your IP   | SSH access     |
-| HTTP       | 80   | 0.0.0.0/0 | HTTP           |
-| Custom TCP | 3000 | 0.0.0.0/0 | Backend API    |
-| Custom TCP | 5173 | 0.0.0.0/0 | Frontend       |
+| Type       | Port | Source    | Description |
+| ---------- | ---- | --------- | ----------- |
+| SSH        | 22   | Your IP   | SSH access  |
+| HTTP       | 80   | 0.0.0.0/0 | HTTP        |
+| Custom TCP | 3000 | 0.0.0.0/0 | Backend API |
+| Custom TCP | 5173 | 0.0.0.0/0 | Frontend    |
 
 ### **PM2 Management Commands:**
 
