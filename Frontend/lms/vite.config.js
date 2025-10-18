@@ -4,15 +4,9 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: "/",
   server: {
     port: 5173,
+    host: true,
     open: false,
-  },
-  build: {
-    sourcemap: false,
-    chunkSizeWarningLimit: 1000,
-    outDir: "dist",
-    assetsDir: "assets",
   },
 });
