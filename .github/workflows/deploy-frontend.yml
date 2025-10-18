@@ -1,7 +1,7 @@
 name: Deploy Frontend to Vercel
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch: # Manual trigger only
   # Commented out auto-deploy to let Vercel handle it
   # push:
   #   branches:
