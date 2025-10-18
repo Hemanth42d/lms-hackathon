@@ -73,8 +73,30 @@ app.use("/api/teacher", teacherRoutes);
 app.use("/api", aiRoutes);
 app.use("/api/video", videoRoutes);
 
+// Enhanced health check endpoint
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
+  res.status(200).json({ 
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+    version: "1.0.0"
+  });
+});
+
+// API info endpoint
+app.get("/api", (req, res) => {
+  res.status(200).json({
+    message: "AnthroLearn API is running",
+    version: "1.0.0",
+    endpoints: {
+      health: "/health",
+      auth: "/api/auth/*",
+      courses: "/api/course/*", 
+      teacher: "/api/teacher/*",
+      ai: "/api/ai/*",
+      video: "/api/video/*"
+    }
+  });
 });
 
 app.use((req, res, next) => {
