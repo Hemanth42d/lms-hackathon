@@ -1,24 +1,7 @@
 {
-  "version": 2,
-  "name": "anthro-learn-frontend",
-  "builds": [
-    {
-      "src": "Frontend/lms/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
+  "buildCommand": "cd Frontend/lms && npm install && npm run build",
+  "outputDirectory": "Frontend/lms/dist",
+  "installCommand": "cd Frontend/lms && npm install",
   "rewrites": [
     {
       "source": "/(.*)",
