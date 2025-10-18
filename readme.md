@@ -11,7 +11,7 @@ The platform is built using the **MERN stack** and deployed on **AWS EC2** for p
 ## 👥 Team Members
 
 - **M V Hemanth** - Full Stack Developer & DevOps
-- **G Monish Reddy** - Testing & Deployment
+- **G Monish Reddy** - Testing & Documentation
 - **D Bharath** - Frontend & Design
 
 <hr/>
