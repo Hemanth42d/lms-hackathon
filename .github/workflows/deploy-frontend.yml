@@ -1,18 +1,14 @@
 name: Deploy Frontend to Vercel
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "Frontend/**"
-      - "vercel.json"
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "Frontend/**"
-      - "vercel.json"
+  workflow_dispatch:  # Manual trigger only
+  # Commented out auto-deploy to let Vercel handle it
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - "Frontend/**"
+  #     - "vercel.json"
 
 jobs:
   deploy:
