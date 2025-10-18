@@ -47,11 +47,6 @@ The platform is built using the **MERN stack** and deployed on **AWS EC2** for p
 - **Student Analytics**: Monitor student progress and engagement
 - **Discussion Moderation**: Manage course discussions and student interactions
 
-### 👨‍💼 For Administrators:
-
-- **User Management**: Manage students, teachers, and system users
-- **System Analytics**: Overview of platform usage and performance
-
 ## Tech Stack 💻🔧
 
 ### Frontend 🎨:
@@ -78,7 +73,6 @@ The platform is built using the **MERN stack** and deployed on **AWS EC2** for p
 - **AWS EC2** - Cloud computing platform for hosting
 - **PM2** - Production process manager for Node.js
 - **MongoDB Atlas** - Cloud database service
-- **Nginx** - Reverse proxy and web server (optional)
 - **Git** - Version control and deployment
 
 ### Development Tools 🛠️:
@@ -132,14 +126,12 @@ AnthroLearn follows a modern **3-tier architecture** with clear separation of co
 - **JWT Authentication** with middleware protection
 - **Auto-grading system** for assignments
 - **Gemini AI integration** for video summarization
-- **File upload handling** with Multer
 - **Real-time progress tracking** APIs
 
 ### 🛢️ **Database Layer**
 
 - **MongoDB** with Mongoose ODM
 - **Flexible schema design** for courses, users, and progress
-- **Optimized queries** for performance
 - **Data relationships** between users, courses, lectures, and progress
 
 ### 🚀 **Infrastructure Layer**
@@ -147,7 +139,6 @@ AnthroLearn follows a modern **3-tier architecture** with clear separation of co
 - **AWS EC2** for production hosting
 - **PM2** process manager for auto-restart and monitoring
 - **MongoDB Atlas** for cloud database
-- **Nginx** (optional) for reverse proxy and SSL
 
 ## Database Schema 🗂
 
