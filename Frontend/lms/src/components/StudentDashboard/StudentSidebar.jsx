@@ -62,7 +62,7 @@ const StudentSidebar = ({ sidebarOpen, toggleSidebar }) => {
 
         {/* Sidebar Header */}
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">EduHub</h2>
+          <h2 className="text-lg font-semibold text-gray-900">AnthroLearn</h2>
         </div>
 
         {/* Menu Items - Scrollable */}

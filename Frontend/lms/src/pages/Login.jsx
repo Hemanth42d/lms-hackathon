@@ -121,7 +121,7 @@ const Login = () => {
               to="/"
               className="text-2xl sm:text-3xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
             >
-              EduConnect
+              AnthroLearn
             </Link>
             <h2 className="mt-6 text-xl sm:text-2xl font-semibold text-gray-900">
               Login
@@ -268,7 +268,7 @@ const Login = () => {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-gray-50 text-gray-500">
-                  New to EduConnect?
+                  New to AnthroLearn?
                 </span>
               </div>
             </div>

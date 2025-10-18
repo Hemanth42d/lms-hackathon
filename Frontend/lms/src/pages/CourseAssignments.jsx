@@ -32,6 +32,7 @@ const CourseAssignments = ({ courseId, course }) => {
   const [submissions, setSubmissions] = useState([]);
   const [quizSubmissions, setQuizSubmissions] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -174,6 +175,13 @@ const CourseAssignments = ({ courseId, course }) => {
 
   useEffect(() => {
     fetchAssignments();
+
+    // Set up periodic refresh for real-time updates of submission counts
+    const interval = setInterval(() => {
+      fetchAssignments();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
   }, [courseId]);
 
   const fetchAssignments = async () => {
@@ -194,6 +202,7 @@ const CourseAssignments = ({ courseId, course }) => {
   };
 
   const fetchSubmissions = async (assignmentId) => {
+    setLoadingSubmissions(true);
     try {
       const response = await axiosInstance.get(
         `/teacher/assignments/${assignmentId}/submissions`
@@ -207,10 +216,13 @@ const CourseAssignments = ({ courseId, course }) => {
         (sub) => sub.assignmentId === assignmentId
       );
       setSubmissions(assignmentSubmissions);
+    } finally {
+      setLoadingSubmissions(false);
     }
   };
 
   const fetchQuizSubmissions = async (assignmentId) => {
+    setLoadingSubmissions(true);
     try {
       const response = await axiosInstance.get(
         `/teacher/assignments/${assignmentId}/quiz-submissions`
@@ -224,6 +236,8 @@ const CourseAssignments = ({ courseId, course }) => {
         (sub) => sub.assignmentId === assignmentId
       );
       setQuizSubmissions(assignmentSubmissions);
+    } finally {
+      setLoadingSubmissions(false);
     }
   };
 
@@ -265,18 +279,31 @@ const CourseAssignments = ({ courseId, course }) => {
 
   const handleGradeSubmission = async (submissionId, grade, feedback) => {
     try {
-      await axiosInstance.put(`/teacher/submissions/${submissionId}/grade`, {
-        grade: parseInt(grade),
-        feedback: feedback || "",
-      });
+      const response = await axiosInstance.put(
+        `/teacher/submissions/${submissionId}/grade`,
+        {
+          grade: parseInt(grade),
+          feedback: feedback || "",
+        }
+      );
 
+      // Update the local submissions state with the response data
       setSubmissions(
         submissions.map((sub) =>
           sub._id === submissionId
-            ? { ...sub, grade: parseInt(grade), feedback }
+            ? {
+                ...sub,
+                grade: response.data.submission.grade,
+                feedback: response.data.submission.feedback,
+                status: response.data.submission.status,
+                percentage: response.data.submission.percentage,
+              }
             : sub
         )
       );
+
+      // Refresh assignment data to update submission counts
+      fetchAssignments();
       toast.success("Grade updated successfully");
     } catch (error) {
       console.error("Error updating grade:", error);
@@ -312,6 +339,20 @@ const CourseAssignments = ({ courseId, course }) => {
     setModalMode("create");
     resetForm();
     setShowModal(true);
+  };
+
+  const handleViewDetails = (assignment) => {
+    setSelectedAssignment(assignment);
+    if (assignment.type === "project") {
+      handleViewSubmissions(assignment);
+    } else if (assignment.type === "quiz") {
+      handleViewSubmissions(assignment);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchAssignments();
+    toast.success("Assignments refreshed");
   };
 
   const handleEditAssignment = (assignment) => {
@@ -562,13 +603,23 @@ const CourseAssignments = ({ courseId, course }) => {
         <h3 className="text-lg font-semibold text-gray-900">
           Course Assignments
         </h3>
-        <button
-          onClick={handleCreateAssignment}
-          className="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-cyan-600 transition-all duration-200 flex items-center space-x-2"
-        >
-          <FaPlus className="w-4 h-4" />
-          <span>Add Assignment</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleRefresh}
+            className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-all duration-200 flex items-center space-x-2"
+            title="Refresh assignments"
+          >
+            <FaClock className="w-4 h-4" />
+            <span>Refresh</span>
+          </button>
+          <button
+            onClick={handleCreateAssignment}
+            className="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-cyan-600 transition-all duration-200 flex items-center space-x-2"
+          >
+            <FaPlus className="w-4 h-4" />
+            <span>Add Assignment</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -667,7 +718,10 @@ const CourseAssignments = ({ courseId, course }) => {
                     <span>View Submissions</span>
                   </button>
                 )}
-                <button className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm font-medium hover:bg-indigo-200 transition-colors">
+                <button
+                  onClick={() => handleViewDetails(assignment)}
+                  className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm font-medium hover:bg-indigo-200 transition-colors"
+                >
                   View Details
                 </button>
                 <button

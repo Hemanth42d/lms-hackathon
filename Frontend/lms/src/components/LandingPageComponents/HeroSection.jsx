@@ -116,7 +116,7 @@ const HeroSection = () => {
                     <div className="w-3 h-3 bg-emerald-400 rounded-full"></div>
                   </div>
                   <div className="text-sm text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
-                    eduflow.com
+                    anthrolearn.com
                   </div>
                 </div>
               </div>

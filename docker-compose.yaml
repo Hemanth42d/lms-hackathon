@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  backend:
+    image: 345466045476.dkr.ecr.us-east-1.amazonaws.com/prod-server
+    container_name: lms-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - JWT_ACCESS_TOKEN=${JWT_ACCESS_TOKEN}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - FRONTEND_URL=http://<EC2_PUBLIC_IP>:5173
+    restart: always
+
+  frontend:
+    image: 345466045476.dkr.ecr.us-east-1.amazonaws.com/prod-server-frontend
+    container_name: lms-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://<EC2_PUBLIC_IP>:3000
+    restart: always

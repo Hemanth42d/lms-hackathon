@@ -74,7 +74,7 @@ const TeacherSidebar = ({ isOpen, onClose }) => {
               <FaGraduationCap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">EduPlatform</h1>
+              <h1 className="text-lg font-bold text-gray-900">AnthroLearn</h1>
               <p className="text-xs text-gray-500">Teacher Portal</p>
             </div>
           </div>

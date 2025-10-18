@@ -240,7 +240,7 @@ const ForgotPassword = () => {
               to="/"
               className="text-2xl sm:text-3xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
             >
-              EduConnect
+              AnthroLearn
             </Link>
 
             <h2 className="mt-6 text-xl sm:text-2xl font-semibold text-gray-900">
