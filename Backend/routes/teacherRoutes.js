@@ -15,6 +15,9 @@ import {
   getCourseAssignments,
   toggleAssignmentStatus,
   updateAssignment,
+  getAssignmentSubmissions,
+  getQuizSubmissions,
+  gradeSubmission,
 } from "../controllers/assignmentControllers.js";
 import {
   getTeacherStats,
@@ -54,5 +57,10 @@ router.patch(
   "/assignments/:assignmentId/toggle-status",
   toggleAssignmentStatus
 );
+
+// Assignment submissions routes
+router.get("/assignments/:assignmentId/submissions", getAssignmentSubmissions);
+router.get("/assignments/:assignmentId/quiz-submissions", getQuizSubmissions);
+router.put("/submissions/:submissionId/grade", gradeSubmission);
 
 export default router;

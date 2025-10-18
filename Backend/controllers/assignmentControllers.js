@@ -126,10 +126,24 @@ export const getCourseAssignments = async (req, res) => {
       .find({ courseId })
       .sort({ createdAt: -1 });
 
+    // Get submission counts for each assignment
+    const assignmentsWithCounts = await Promise.all(
+      assignments.map(async (assignment) => {
+        const submissionCount = await Submission.countDocuments({
+          assignmentId: assignment._id,
+        });
+
+        return {
+          ...assignment.toObject(),
+          submissionCount,
+        };
+      })
+    );
+
     res.json({
       success: true,
       message: "Assignments fetched successfully",
-      assignments,
+      assignments: assignmentsWithCounts,
     });
   } catch (error) {
     console.error("Error fetching assignments:", error);
@@ -595,6 +609,240 @@ export const getSubmissionDetails = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching submission details:", error);
+    res.status(500).json({
+      error: true,
+      message: error.message,
+    });
+  }
+};
+
+// Get assignment submissions for teacher
+export const getAssignmentSubmissions = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+      return res.status(400).json({
+        error: true,
+        message: "Invalid assignment ID format",
+      });
+    }
+
+    // Verify assignment exists
+    const assignment = await assignmentModel.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({
+        error: true,
+        message: "Assignment not found",
+      });
+    }
+
+    // Get all submissions for this assignment
+    const submissions = await Submission.find({ assignmentId })
+      .populate("studentId", "firstName lastName userName email")
+      .sort({ submittedAt: -1 });
+
+    // Format submissions for response
+    const formattedSubmissions = submissions.map((submission) => {
+      const student = submission.studentId;
+      return {
+        _id: submission._id,
+        studentId: student._id,
+        studentName:
+          `${student.firstName || ""} ${student.lastName || ""}`.trim() ||
+          student.userName ||
+          "Unknown Student",
+        studentEmail: student.email,
+        assignmentId: submission.assignmentId,
+        submissionType: submission.submissionType || "text",
+        submissionData: submission.submissionData,
+        submittedAt: submission.submittedAt,
+        status: submission.status || "submitted",
+        grade: submission.grade,
+        feedback: submission.feedback,
+        isLate: submission.isLate || false,
+        score: submission.score,
+        maxScore: submission.maxScore,
+        percentage: submission.percentage,
+      };
+    });
+
+    res.json({
+      success: true,
+      message: "Assignment submissions fetched successfully",
+      submissions: formattedSubmissions,
+      total: formattedSubmissions.length,
+      assignment: {
+        _id: assignment._id,
+        title: assignment.title,
+        type: assignment.type,
+        maxMarks: assignment.maxMarks,
+        dueDate: assignment.dueDate,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching assignment submissions:", error);
+    res.status(500).json({
+      error: true,
+      message: error.message,
+    });
+  }
+};
+
+// Get quiz submissions for teacher
+export const getQuizSubmissions = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
+      return res.status(400).json({
+        error: true,
+        message: "Invalid assignment ID format",
+      });
+    }
+
+    // Verify assignment exists and is a quiz
+    const assignment = await assignmentModel.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({
+        error: true,
+        message: "Assignment not found",
+      });
+    }
+
+    if (assignment.type !== "quiz") {
+      return res.status(400).json({
+        error: true,
+        message: "This endpoint is only for quiz assignments",
+      });
+    }
+
+    // Get all quiz submissions for this assignment
+    const submissions = await Submission.find({ assignmentId })
+      .populate("studentId", "firstName lastName userName email")
+      .sort({ submittedAt: -1 });
+
+    // Format quiz submissions for response
+    const formattedSubmissions = submissions.map((submission) => {
+      const student = submission.studentId;
+      return {
+        _id: submission._id,
+        studentId: student._id,
+        studentName:
+          `${student.firstName || ""} ${student.lastName || ""}`.trim() ||
+          student.userName ||
+          "Unknown Student",
+        studentEmail: student.email,
+        assignmentId: submission.assignmentId,
+        answers: submission.submissionData?.answers || [],
+        submittedAt: submission.submittedAt,
+        status: submission.status || "submitted",
+        autoGrade: submission.score,
+        totalMarks: assignment.maxMarks,
+        isLate: submission.isLate || false,
+        score: submission.score,
+        maxScore: submission.maxScore,
+        percentage: submission.percentage,
+        detailedResults: submission.detailedResults,
+      };
+    });
+
+    res.json({
+      success: true,
+      message: "Quiz submissions fetched successfully",
+      submissions: formattedSubmissions,
+      total: formattedSubmissions.length,
+      assignment: {
+        _id: assignment._id,
+        title: assignment.title,
+        questions: assignment.questions,
+        maxMarks: assignment.maxMarks,
+        dueDate: assignment.dueDate,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching quiz submissions:", error);
+    res.status(500).json({
+      error: true,
+      message: error.message,
+    });
+  }
+};
+
+// Grade a submission
+export const gradeSubmission = async (req, res) => {
+  try {
+    const { submissionId } = req.params;
+    const { grade, feedback } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(submissionId)) {
+      return res.status(400).json({
+        error: true,
+        message: "Invalid submission ID format",
+      });
+    }
+
+    if (grade === undefined || grade === null) {
+      return res.status(400).json({
+        error: true,
+        message: "Grade is required",
+      });
+    }
+
+    // Find and update the submission
+    const submission = await Submission.findById(submissionId);
+    if (!submission) {
+      return res.status(404).json({
+        error: true,
+        message: "Submission not found",
+      });
+    }
+
+    // Get assignment to validate grade against maxMarks
+    const assignment = await assignmentModel.findById(submission.assignmentId);
+    if (!assignment) {
+      return res.status(404).json({
+        error: true,
+        message: "Assignment not found",
+      });
+    }
+
+    const numericGrade = parseInt(grade);
+    if (
+      isNaN(numericGrade) ||
+      numericGrade < 0 ||
+      numericGrade > assignment.maxMarks
+    ) {
+      return res.status(400).json({
+        error: true,
+        message: `Grade must be between 0 and ${assignment.maxMarks}`,
+      });
+    }
+
+    // Update submission with grade and feedback
+    submission.grade = numericGrade;
+    submission.feedback = feedback || "";
+    submission.status = "graded";
+    submission.score = numericGrade;
+    submission.maxScore = assignment.maxMarks;
+    submission.percentage = (numericGrade / assignment.maxMarks) * 100;
+    submission.gradedAt = new Date();
+
+    await submission.save();
+
+    res.json({
+      success: true,
+      message: "Submission graded successfully",
+      submission: {
+        _id: submission._id,
+        grade: submission.grade,
+        feedback: submission.feedback,
+        status: submission.status,
+        percentage: submission.percentage,
+      },
+    });
+  } catch (error) {
+    console.error("Error grading submission:", error);
     res.status(500).json({
       error: true,
       message: error.message,
