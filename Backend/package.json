@@ -4,7 +4,13 @@
   "main": "index.js",
   "scripts": {
     "dev": "node --watch index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "npm install",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "type": "module",
   "keywords": [],

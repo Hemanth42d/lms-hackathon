@@ -1,12 +1,12 @@
 # AnthroLearn 🎓
 
-## Learning Management System - Hackathon Project
+## Learnin| [Deployment](#deployment-) | 🚀 Vercel & Render deployment setup | Management System - Hackathon Project
 
 # Project Description 📝
 
 AnthroLearn is a comprehensive Learning Management System (LMS) developed for a hackathon competition. This platform enables seamless interaction between students, teachers, and administrators with features including course management, video lectures, assignments with auto-grading, real-time discussions, and AI-powered video summarization.
 
-The platform is built using the **MERN stack** with modern features like Docker containerization, AWS deployment, and GitHub Actions CI/CD pipeline.
+The platform is built using the **MERN stack** with modern deployment on **Vercel** (frontend) and **Render** (backend), featuring automated CI/CD via GitHub Actions.
 
 ## � Team Members
 
@@ -208,44 +208,64 @@ cd ../Frontend/lms
 npm install
 
 # Set up environment variables
-# Backend: Create .env file with MongoDB URI, JWT secret, Gemini API key
-# Frontend: Create .env file with API URLs
+# Backend: Copy .env.example to .env and fill in values
+# Frontend: Copy .env.example to .env and fill in values
 
 # Start development servers
 npm run dev # Frontend (port 5173)
 npm start   # Backend (port 3000)
 ```
 
-### **Docker Deployment:**
-
-```bash
-# Build and run with Docker Compose
-docker-compose up --build
-
-# Or build individual containers
-docker build -f Dockerfile.backend -t lms-backend .
-docker build -f Dockerfile.frontend -t lms-frontend .
-```
-
 ### **Production Deployment:**
 
-- **AWS ECR** for container registry
-- **AWS EC2** for hosting
-- **GitHub Actions** for automated CI/CD
-- **Environment variables** managed securely
+#### **Frontend (Vercel):**
+
+- ✅ **Platform**: [Vercel](https://vercel.com)
+- ✅ **Framework**: Vite + React
+- ✅ **Auto-deployment** via GitHub integration
+- ✅ **Global CDN** and **HTTPS** included
+
+#### **Backend (Render):**
+
+- ✅ **Platform**: [Render](https://render.com)
+- ✅ **Runtime**: Node.js
+- ✅ **Database**: MongoDB Atlas
+- ✅ **Auto-deployment** via GitHub integration
+
+#### **Automated CI/CD:**
+
+- 🔄 **GitHub Actions** workflows for both frontend and backend
+- 🔄 **Automatic deployments** on push to main branch
+- 🔄 **Environment-specific** builds and configurations
+
+### **Quick Deployment:**
+
+```bash
+# Verify deployment readiness
+./verify-deployment.sh
+
+# Push to GitHub (triggers auto-deployment)
+git add .
+git commit -m "Deploy to production"
+git push origin main
+```
 
 ### **Key Environment Variables:**
 
 ```env
-# Backend
-MONGO_URI=your_mongodb_connection_string
-JWT_ACCESS_TOKEN=your_jwt_secret
+# Backend (Render)
+NODE_ENV=production
+PORT=10000
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/lms
+JWT_SECRET=your_super_secret_jwt_key
 GEMINI_API_KEY=your_gemini_api_key
-FRONTEND_URL=http://your-frontend-url
+FRONTEND_URL=https://your-app.vercel.app
 
-# Frontend
-VITE_API_URL=http://your-backend-url
+# Frontend (Vercel)
+VITE_API_URL=https://your-backend.onrender.com/api
 ```
+
+📖 **For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
 
 ## Features Highlights 🌟
 

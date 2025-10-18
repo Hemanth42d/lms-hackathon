@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "name": "anthrolearn-frontend",
+  "builds": [
+    {
+      "src": "Frontend/lms/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "Frontend/lms/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/Frontend/lms/dist/index.html"
+    }
+  ],
+  "buildCommand": "cd Frontend/lms && npm install && npm run build",
+  "outputDirectory": "Frontend/lms/dist",
+  "installCommand": "cd Frontend/lms && npm install",
+  "framework": "vite",
+  "env": {
+    "VITE_API_URL": "@vite_api_url"
+  }
+}
