@@ -29,28 +29,31 @@ axiosInstance.interceptors.response.use(
     // Enhanced error handling for production
     const errorMessage = error.response?.data?.message || error.message;
     const statusCode = error.response?.status;
-    
+
     // Log errors in development
     if (import.meta.env.DEV) {
       console.log("API Error:", error.response?.data || error.message);
       console.log("Full URL:", error.config?.url);
       console.log("Status Code:", statusCode);
     }
-    
+
     // Handle specific error cases
     if (statusCode === 401) {
       // Unauthorized - clear token and redirect to login
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
-        window.location.href = '/login';
+      if (
+        window.location.pathname !== "/login" &&
+        window.location.pathname !== "/"
+      ) {
+        window.location.href = "/login";
       }
     } else if (statusCode === 404) {
       console.error("Resource not found:", error.config?.url);
     } else if (statusCode >= 500) {
       console.error("Server error:", errorMessage);
     }
-    
+
     return Promise.reject(error);
   }
 );

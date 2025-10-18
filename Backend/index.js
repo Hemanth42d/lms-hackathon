@@ -75,11 +75,11 @@ app.use("/api/video", videoRoutes);
 
 // Enhanced health check endpoint
 app.get("/health", (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     status: "ok",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || "development",
-    version: "1.0.0"
+    version: "1.0.0",
   });
 });
 
@@ -91,11 +91,11 @@ app.get("/api", (req, res) => {
     endpoints: {
       health: "/health",
       auth: "/api/auth/*",
-      courses: "/api/course/*", 
+      courses: "/api/course/*",
       teacher: "/api/teacher/*",
       ai: "/api/ai/*",
-      video: "/api/video/*"
-    }
+      video: "/api/video/*",
+    },
   });
 });
 

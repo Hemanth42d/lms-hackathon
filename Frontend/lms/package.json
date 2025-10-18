@@ -1,15 +1,13 @@
 {
-  "name": "anthro-learn-frontend",
+  "name": "lms",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "build:production": "NODE_ENV=production vite build",
-    "analyze": "npm run build && npx vite-bundle-analyzer dist"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
