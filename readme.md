@@ -1,14 +1,14 @@
 # AnthroLearn 🎓
 
-## Learnin| [Deployment](#deployment-) | 🚀 Vercel & Render deployment setup | Management System - Hackathon Project
+## Learning Management System - Hackathon Project
 
 # Project Description 📝
 
 AnthroLearn is a comprehensive Learning Management System (LMS) developed for a hackathon competition. This platform enables seamless interaction between students, teachers, and administrators with features including course management, video lectures, assignments with auto-grading, real-time discussions, and AI-powered video summarization.
 
-The platform is built using the **MERN stack** with modern deployment on **Vercel** (frontend) and **Render** (backend), featuring automated CI/CD via GitHub Actions.
+The platform is built using the **MERN stack** and deployed on **AWS EC2** for production hosting with PM2 process management.
 
-## � Team Members
+## 👥 Team Members
 
 - **M V Hemanth** - Full Stack Developer & DevOps
 - **G Monish Reddy** - Testing & Deployment
@@ -26,7 +26,8 @@ The platform is built using the **MERN stack** with modern deployment on **Verce
 | [System Architecture](#system-architecture-)   | � Overview of the system architecture |
 | [Database Schema](#database-schema-)           | 🗂 Database models and relationships   |
 | [React Features](#react-features-)             | ⚛️ React hooks and libraries used     |
-| [Deployment](#deployment-)                     | � Docker and AWS deployment setup     |
+| [Deployment](#deployment-)                     | 🚀 AWS EC2 deployment setup           |
+| [Live Application](#live-application-)         | 🌐 Access the deployed application    |
 
 ## AnthroLearn Features 🎯
 
@@ -74,11 +75,11 @@ The platform is built using the **MERN stack** with modern deployment on **Verce
 
 ### DevOps & Deployment 🚀:
 
-- **Docker** - Containerization platform
-- **AWS ECR** - Container registry
-- **AWS EC2** - Cloud computing platform
-- **GitHub Actions** - CI/CD pipeline
-- **Docker Compose** - Multi-container orchestration
+- **AWS EC2** - Cloud computing platform for hosting
+- **PM2** - Production process manager for Node.js
+- **MongoDB Atlas** - Cloud database service
+- **Nginx** - Reverse proxy and web server (optional)
+- **Git** - Version control and deployment
 
 ### Development Tools 🛠️:
 
@@ -107,10 +108,8 @@ lms-hackathon/
 │   │   └── utils/           # Frontend utilities
 │   ├── public/              # Static assets
 │   └── package.json         # Frontend dependencies
-├── .github/workflows/        # GitHub Actions CI/CD
-├── docker-compose.yaml       # Multi-container setup
-├── Dockerfile.backend        # Backend container config
-├── Dockerfile.frontend       # Frontend container config
+├── AWS_SETUP.md             # AWS EC2 deployment guide
+├── setup-aws.sh             # Automated deployment script
 └── README.md                # Project documentation
 ```
 
@@ -145,10 +144,10 @@ AnthroLearn follows a modern **3-tier architecture** with clear separation of co
 
 ### 🚀 **Infrastructure Layer**
 
-- **Docker containerization** for consistent deployments
-- **AWS ECR** for container registry
 - **AWS EC2** for production hosting
-- **GitHub Actions** for automated CI/CD pipeline
+- **PM2** process manager for auto-restart and monitoring
+- **MongoDB Atlas** for cloud database
+- **Nginx** (optional) for reverse proxy and SSL
 
 ## Database Schema 🗂
 
@@ -192,6 +191,22 @@ AnthroLearn uses a comprehensive MongoDB database design with 8 core collections
 
 ## Deployment 🚀
 
+### **Live Application 🌐**
+
+The application is currently deployed and accessible at:
+
+- **Frontend**: http://34.227.106.134:5173
+- **Backend API**: http://34.227.106.134:3000
+
+### **Deployment Architecture:**
+
+- **Platform**: AWS EC2 (Ubuntu 22.04 LTS)
+- **Instance Type**: t2.medium
+- **Process Manager**: PM2 for automatic restarts and monitoring
+- **Database**: MongoDB Atlas (Cloud)
+- **Frontend**: Vite build served with PM2
+- **Backend**: Node.js/Express managed by PM2
+
 ### **Development Setup:**
 
 ```bash
@@ -203,69 +218,165 @@ cd lms-hackathon
 cd Backend
 npm install
 
+# Create Backend .env file
+cat > .env << EOF
+PORT=3000
+MONGODB_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_secret_key
+FRONTEND_URL=http://localhost:5173
+NODE_ENV=development
+EOF
+
+cd ..
+
 # Install frontend dependencies
-cd ../Frontend/lms
+cd Frontend/lms
 npm install
 
-# Set up environment variables
-# Backend: Copy .env.example to .env and fill in values
-# Frontend: Copy .env.example to .env and fill in values
+# Create Frontend .env file
+cat > .env << EOF
+VITE_BACKEND_URL=http://localhost:3000
+VITE_GEMINI_API=your_gemini_api_key
+EOF
 
 # Start development servers
-npm run dev # Frontend (port 5173)
-npm start   # Backend (port 3000)
+npm run dev    # Frontend (port 5173)
+cd ../../Backend
+npm start      # Backend (port 3000)
 ```
 
-### **Production Deployment:**
+### **AWS EC2 Production Deployment:**
 
-#### **Frontend (Vercel):**
-
-- ✅ **Platform**: [Vercel](https://vercel.com)
-- ✅ **Framework**: Vite + React
-- ✅ **Auto-deployment** via GitHub integration
-- ✅ **Global CDN** and **HTTPS** included
-
-#### **Backend (Render):**
-
-- ✅ **Platform**: [Render](https://render.com)
-- ✅ **Runtime**: Node.js
-- ✅ **Database**: MongoDB Atlas
-- ✅ **Auto-deployment** via GitHub integration
-
-#### **Automated CI/CD:**
-
-- 🔄 **GitHub Actions** workflows for both frontend and backend
-- 🔄 **Automatic deployments** on push to main branch
-- 🔄 **Environment-specific** builds and configurations
-
-### **Quick Deployment:**
+#### **Quick Setup:**
 
 ```bash
-# Verify deployment readiness
-./verify-deployment.sh
+# On your AWS EC2 instance:
 
-# Push to GitHub (triggers auto-deployment)
-git add .
-git commit -m "Deploy to production"
-git push origin main
+# 1. Install Node.js & PM2
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs git
+sudo npm install -g pm2 serve
+
+# 2. Clone and setup
+git clone https://github.com/Hemanth42d/lms-hackathon.git
+cd lms-hackathon
+
+# 3. Run automated setup script
+./setup-aws.sh
+```
+
+#### **Manual Setup:**
+
+```bash
+# Backend Setup
+cd Backend
+npm install
+# Create .env file with production values
+pm2 start index.js --name lms-backend
+
+# Frontend Setup
+cd ../Frontend/lms
+npm install
+npm run build
+pm2 serve dist 5173 --spa --name lms-frontend
+
+# Save PM2 configuration
+pm2 save
+pm2 startup  # Follow the instructions to enable auto-start
+```
+
+#### **AWS Security Group Configuration:**
+
+Ensure the following inbound rules are set:
+
+| Type       | Port | Source    | Description    |
+| ---------- | ---- | --------- | -------------- |
+| SSH        | 22   | Your IP   | SSH access     |
+| HTTP       | 80   | 0.0.0.0/0 | HTTP           |
+| Custom TCP | 3000 | 0.0.0.0/0 | Backend API    |
+| Custom TCP | 5173 | 0.0.0.0/0 | Frontend       |
+
+### **PM2 Management Commands:**
+
+```bash
+# Check service status
+pm2 status
+
+# View logs
+pm2 logs
+pm2 logs lms-backend
+pm2 logs lms-frontend
+
+# Restart services
+pm2 restart all
+pm2 restart lms-backend
+pm2 restart lms-frontend
+
+# Stop services
+pm2 stop all
+
+# Monitor processes
+pm2 monit
+```
+
+### **Updating the Deployment:**
+
+```bash
+# SSH into EC2 instance
+ssh -i your-key.pem ubuntu@34.227.106.134
+
+# Navigate to project
+cd ~/lms-hackathon
+
+# Pull latest changes
+git pull
+
+# Update Backend
+cd Backend
+npm install
+pm2 restart lms-backend
+
+# Update Frontend
+cd ../Frontend/lms
+npm install
+npm run build
+pm2 restart lms-frontend
 ```
 
 ### **Key Environment Variables:**
 
 ```env
-# Backend (Render)
+# Backend (.env)
+PORT=3000
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/lms
+JWT_SECRET=your_super_secret_jwt_key_minimum_32_characters
+FRONTEND_URL=http://34.227.106.134:5173
 NODE_ENV=production
-PORT=10000
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/lms
-JWT_SECRET=your_super_secret_jwt_key
-GEMINI_API_KEY=your_gemini_api_key
-FRONTEND_URL=https://your-app.vercel.app
 
-# Frontend (Vercel)
-VITE_API_URL=https://your-backend.onrender.com/api
+# Frontend (.env)
+VITE_BACKEND_URL=http://34.227.106.134:3000
+VITE_GEMINI_API=your_gemini_api_key
 ```
 
-📖 **For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
+### **Monitoring & Logs:**
+
+```bash
+# View real-time logs
+pm2 logs --lines 100
+
+# Check server health
+curl http://localhost:3000
+curl http://localhost:5173
+
+# Check process status
+pm2 status
+
+# View detailed process info
+pm2 show lms-backend
+pm2 show lms-frontend
+```
+
+📖 **For detailed deployment troubleshooting, see [AWS_SETUP.md](./AWS_SETUP.md)**
 
 ## Features Highlights 🌟
 
@@ -304,6 +415,30 @@ VITE_API_URL=https://your-backend.onrender.com/api
 
 ---
 
+## Live Application 🌐
+
+### **Access the Platform:**
+
+- **Frontend**: [http://34.227.106.134:5173](http://34.227.106.134:5173)
+- **Backend API**: [http://34.227.106.134:3000](http://34.227.106.134:3000)
+
+### **Deployment Details:**
+
+- **Hosting**: AWS EC2 (Ubuntu 22.04 LTS)
+- **Instance**: t2.medium (2 vCPU, 4GB RAM)
+- **Process Manager**: PM2 for high availability
+- **Database**: MongoDB Atlas (Cloud)
+- **Uptime**: 99.9% with PM2 auto-restart
+
+### **API Health Check:**
+
+```bash
+curl http://34.227.106.134:3000
+# Response: {"message":"AnthroLearn API Server"}
+```
+
+---
+
 ## 🚀 **Hackathon Achievement**
 
 This project was developed as part of a hackathon competition, showcasing:
@@ -313,6 +448,7 @@ This project was developed as part of a hackathon competition, showcasing:
 - **Modern Architecture** - Implementation of industry-standard practices
 - **Scalable Design** - Built for future enhancements and growth
 - **Innovation** - AI integration and modern UX/UI design
+- **Production Deployment** - Successfully deployed on AWS EC2
 
 ---
 
